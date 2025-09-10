@@ -3,3 +3,4 @@ sqlalchemy    # interagir avec la database
 pymysql      # relier database mysql
 passlib[bcrypt]     # pr crypter mot de passe
 bcrypt
+uvicorn[standard]
