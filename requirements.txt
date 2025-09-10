@@ -4,3 +4,5 @@ pymysql      # relier database mysql
 passlib[bcrypt]     # pr crypter mot de passe
 bcrypt
 uvicorn[standard]
+python-jose[cryptography]
+python-multipart
