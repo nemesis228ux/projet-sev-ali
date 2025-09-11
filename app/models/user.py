@@ -19,7 +19,7 @@ class User(Base):
   nom_user: str = Column(String(50), index=True, nullable=False)
   email: str = Column(String(50), index=True, nullable=False)
   hashed_password: str = Column(String(180), index=True, nullable=False)
-  addresse: str = Column(String(50), index=True, nullable=False)
+  adresse: str = Column(String(50), index=True, nullable=False)
   date_naissance: str = Column(Date, index=True, nullable=False)
   role: str = Column(SqlEnum(UserRole), default=UserRole.client, index=True, nullable=False)
 

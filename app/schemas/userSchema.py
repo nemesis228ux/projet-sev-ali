@@ -8,7 +8,7 @@ class UserBase(BaseModel):
   
   nom_user: str
   email: EmailStr
-  addresse: str
+  adresse: str
   date_naissance: str
   role: UserRole = UserRole.client
   id_banque: int
@@ -24,7 +24,7 @@ class UserUpdate(BaseModel):
 
   nom_user: Optional[str] = None 
   email: Optional[EmailStr] = None
-  addresse: Optional[str] = None
+  adresse: Optional[str] = None
   date_naissance: Optional[str] = None
   role: Optional[UserRole] = None
   id_banque: Optional[int] = None
@@ -36,7 +36,7 @@ class UserRead(BaseModel):
   id_user: int
   nom_user: str
   email: EmailStr
-  addresse: str
+  adresse: str
   date_naissance: str
   role: UserRole = UserRole.client
   id_banque: int
