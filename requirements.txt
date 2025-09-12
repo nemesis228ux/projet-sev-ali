@@ -1,3 +1,4 @@
+pydantic
 fastapi[standard]
 sqlalchemy    # interagir avec la database
 pymysql      # relier database mysql
