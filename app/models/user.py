@@ -3,6 +3,10 @@ from app.core.database import Base
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum, Date, ForeignKey
 from enum import Enum as UserEnum
 from sqlalchemy.orm import relationship
+from typing import List
+
+from app.models.banque import Banque
+from app.models.compte import Compte
 
 
 class UserRole(UserEnum):
@@ -25,4 +29,9 @@ class User(Base):
 
   id_banque: int = Column(Integer, ForeignKey("banques.id_banque"), index=True, nullable=False)
 
-  banque = relationship("Banque", back_populates="users")
+  banque : Banque = relationship("Banque", back_populates="users")
+
+  comptes : List[Compte] = relationship(
+      "Compte",
+      back_populates = "base_user"
+  )
