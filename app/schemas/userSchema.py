@@ -15,12 +15,18 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+  """Model pydantic pr valider le creation d'un user"""
   
   password: str
 
 
 
 class UserUpdate(BaseModel):
+  """Ceci est un model pydantic pr mettre a jour les infos d'un user
+
+  Args:
+      BaseModel (Pydantic): valide les données evoyées
+  """
 
   nom_user: Optional[str] = None 
   email: Optional[EmailStr] = None
@@ -32,6 +38,12 @@ class UserUpdate(BaseModel):
 
 
 class UserRead(BaseModel):
+  """Model pydantic pour valider la sortie des données pour ue
+  requette GET par exemple
+
+  Args:
+      BaseModel (_type_): _description_
+  """
   
   id_user: int
   nom_user: str
