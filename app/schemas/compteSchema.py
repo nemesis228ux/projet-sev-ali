@@ -17,7 +17,7 @@ class AccountCreate(BaseModel):
 
 
 # Modèle d'une requetes pour recuperer les différents comptes d'un User
-class AccountsFetchRequest(BaseModel):
+class AccountsFetch(BaseModel):
     """Modèle d'une requetes pour recuperer les différents comptes d'un User"""
     user_id : int
     token : str  # À voir après si ça va fonctionner comme ça
@@ -50,4 +50,4 @@ class AccountInfo(BaseModel):
 # Modèle de réponse d'une requetes d'obtentions de comptes
 class AccountsView(BaseModel):
     """Modèle de réponse d'une requetes d'obtentions de comptes"""
-    accounts : List[AccountInfo] | None  # À revoir si ce n'est pas trop lourd
+    accounts : Optional[List[AccountInfo]]  # À revoir si ce n'est pas trop lourd
