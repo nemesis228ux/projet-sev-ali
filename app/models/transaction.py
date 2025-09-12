@@ -1,5 +1,5 @@
 from app.core.database import Base
-from sqlalchemy import Column, Integer, Enum as SqlEnum, DateTime, ForeignKey, Double
+from sqlalchemy import Column, Integer, Enum as SqlEnum, DateTime, ForeignKey, Double, String
 from sqlalchemy.sql import func
 from enum import Enum
 from sqlalchemy.orm import relationship
@@ -29,8 +29,8 @@ class Transaction(Base):
         index=True
     )
 
-    dest_account_id: int = Column(
-        Integer,
+    dest_num_compte: str = Column(
+        String,
         index=True,
         nullable=True       #NULL en cas de dépotou retrait. Ou soit on remet juste l'id du compte du user
     )

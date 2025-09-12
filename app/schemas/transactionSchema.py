@@ -11,7 +11,7 @@ class TransactionInit(BaseModel):
     account_id: int
     transaction_type: TransactionTypes
     amount: float
-    destinator_account_id: Optional[int]      #À revoir dans le cas des dépot ou retrait
+    destinator_num_compte: Optional[str]      #À revoir dans le cas des dépot ou retrait
 
 
 class TransactionActionTypes(str, Enum):
@@ -31,7 +31,7 @@ class TransactionInfo(BaseModel):
 
     id_transac: int
     initiator_account_id: int
-    dest_account_id: Optional[int]
+    dest_num_compte: Optional[str]
     type_transac: TransactionTypes
     montant: float
     date_transaction: str
