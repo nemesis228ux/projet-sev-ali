@@ -26,7 +26,7 @@ class Compte(Base):
         index = True,
     )
 
-    numero_compte : str = Column(       # Finalement en str pour plus de simplicité
+    numero_compte : str = Column(       # A revoir en str pour plus de simplicité ou en int
         String,
         unique = True,
         nullable = False,
