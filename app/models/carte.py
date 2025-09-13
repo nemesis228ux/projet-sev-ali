@@ -1,0 +1,58 @@
+from app.core.database import Base
+from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey, Double
+from enum import Enum
+
+from .compte import Compte
+from sqlalchemy.orm import relationship
+
+class CarteTypes(str, Enum):
+    VISA = "visa"
+    MASTERCARD = "mastercard"
+    AUTRE = "autre"
+
+class Carte(Base):
+    """Modèles SQLAlchemy de la table `cartes_bancaires`"""
+    __tablename__ = 'cartes_bancaires'
+
+    id_carte : int = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    numero_carte : str = Column(
+        String(16),
+        index=True,
+        nullable=False,
+        unique=True
+    )
+
+    hashed_code_secu : str = Column(
+        String,
+        index=True,
+        nullable=False
+    )
+
+    type_carte : str = Column(
+        SqlEnum(CarteTypes),
+        nullable=False
+    )
+
+    date_expiration : str = Column(
+        DateTime,
+        nullable=False,
+        index=True
+    )
+
+    id_compte :  int = Column(
+        Integer,
+        ForeignKey("comptes.id_compte"),
+        index=True
+    )
+
+    base_account : Compte = relationship(
+        "Compte",
+        back_populates='carte',
+        uselist=False
+    )
+

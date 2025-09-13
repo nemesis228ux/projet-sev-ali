@@ -1,11 +1,12 @@
 # Contient le model sqlalchemy de la table compte
-from typing import List
+from typing import List, Optional
 
 from app.core.database import Base
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey, Double
 from sqlalchemy.sql import func
 from enum import Enum
 
+from .carte import Carte
 from .transaction import Transaction
 from .user import User
 from sqlalchemy.orm import relationship
@@ -72,5 +73,8 @@ class Compte(Base):
         back_populates="base_account"
     )
 
-
-    #TODO : Ajouter une relationship pour les cb quand ali aura terminé
+    carte : Optional[Carte] = relationship(
+        "Carte",
+        back_populates="base_account",
+        uselist=False
+    )
