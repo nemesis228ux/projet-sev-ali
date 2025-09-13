@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Optional, List
 
 from pydantic import BaseModel
@@ -14,17 +13,10 @@ class TransactionInit(BaseModel):
     destinator_num_compte: Optional[str]      #À revoir dans le cas des dépot ou retrait
 
 
-class TransactionActionTypes(str, Enum):
-    """Enumeration des differentes actions possibles sur une transac"""
-    STATUS = "status"
-    CANCEL = "cancel"
-    READ = "read"
-
 class TransactionActions(BaseModel):
-    """Modèle d'une requetes pour effectuer une action sur une transactiion"""
+    """Modèle d'une requetes pour effectuer une action (Voir, supprimer, annulé...) sur une transactiion"""
     account_id: int
     transaction_id: int
-    action: TransactionActionTypes
 
 class TransactionInfo(BaseModel):
     """Modèle de reponse d'une requete de visualisation de transaction"""
@@ -41,6 +33,7 @@ class TransactionsFetch(BaseModel):
     account_id: int
 
 class TransactionViews(BaseModel):
+    """Modèle de reponse d'une requete de visualisation de toutes les transactions d'un compte"""
 
     transactions: Optional[List[TransactionInfo]]
 

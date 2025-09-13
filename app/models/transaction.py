@@ -30,7 +30,7 @@ class Transaction(Base):
     )
 
     dest_num_compte: str = Column(
-        String,
+        String(16),
         index=True,
         nullable=True       #NULL en cas de dépotou retrait. Ou soit on remet juste l'id du compte du user
     )

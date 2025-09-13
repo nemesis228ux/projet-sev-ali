@@ -32,7 +32,7 @@ class Compte(Base):
     )
 
     numero_compte: str = Column(  # A revoir en str pour plus de simplicité ou en int
-        String,
+        String(16),
         unique=True,
         nullable=False,
         index=True
