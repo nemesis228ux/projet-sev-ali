@@ -4,8 +4,6 @@ from sqlalchemy.sql import func
 from enum import Enum
 from sqlalchemy.orm import relationship
 
-from app.models.compte import Compte
-
 
 class TransactionTypes(str, Enum):
     TRANSFERT = "transfert"
@@ -52,7 +50,7 @@ class Transaction(Base):
         default=func.now()
     )
 
-    base_account: Compte = relationship(
+    base_account = relationship(
         "Compte",
         back_populates="transactions",
         uselist=False
