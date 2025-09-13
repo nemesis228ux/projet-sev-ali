@@ -15,7 +15,7 @@ class TransactionTypes(str, Enum):
 class Transaction(Base):
     """Modèles SQLAlchemy de la table `transactions`"""
 
-    __tablename__ = "transctions"
+    __tablename__ = "transactions"
 
     id_transac: int = Column(
         Integer,
@@ -32,7 +32,7 @@ class Transaction(Base):
     dest_num_compte: str = Column(
         String(16),
         index=True,
-        nullable=True       #NULL en cas de dépotou retrait. Ou soit on remet juste l'id du compte du user
+        nullable=True       #NULL en cas de dépotou retrait. Ou soit on remet juste l'id du compte de l'user
     )
 
     type_transac: str = Column(
