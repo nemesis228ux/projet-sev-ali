@@ -1,14 +1,9 @@
 # Contient le model sqlalchemy de la table compte
-from typing import List, Optional
-
 from app.core.database import Base
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey, Double
 from sqlalchemy.sql import func
 from enum import Enum
 
-from .carte import Carte
-from .transaction import Transaction
-from .user import User
 from sqlalchemy.orm import relationship
 
 
@@ -62,18 +57,18 @@ class Compte(Base):
         index=True
     )
 
-    base_user: User = relationship(
+    base_user = relationship(
         "User",
         back_populates="comptes",
         uselist=False
     )
 
-    transactions: List[Transaction] = relationship(
+    transactions = relationship(
         "Transaction",
         back_populates="base_account"
     )
 
-    carte : Optional[Carte] = relationship(
+    carte = relationship(
         "Carte",
         back_populates="base_account",
         uselist=False

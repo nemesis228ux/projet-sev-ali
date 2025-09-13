@@ -2,7 +2,6 @@ from app.core.database import Base
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey
 from enum import Enum
 
-from .compte import Compte
 from sqlalchemy.orm import relationship
 
 class CarteTypes(str, Enum):
@@ -28,7 +27,7 @@ class Carte(Base):
     )
 
     hashed_code_secu : str = Column(
-        String,
+        String(255),
         index=True,
         nullable=False
     )
@@ -50,9 +49,8 @@ class Carte(Base):
         index=True
     )
 
-    base_account : Compte = relationship(
+    base_account = relationship(
         "Compte",
         back_populates='carte',
         uselist=False
     )
-

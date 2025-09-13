@@ -1,10 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+from app.core.config import DATABASE_PASSWORD
 
 # databse url
 user="root"
-password=""
+password= DATABASE_PASSWORD
 host="localhost"
 db_name="systeme_banque"
 
