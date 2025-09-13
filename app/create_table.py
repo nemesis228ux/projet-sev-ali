@@ -5,6 +5,6 @@
 # sont importer avnt d'executer ex: from app.models.user import User
 
 from app.core.database import Base, engine
-
+from app.models import * ## permet de disposer de tous models au moment de la creation des tables
 
 Base.metadata.create_all(bind=engine)
