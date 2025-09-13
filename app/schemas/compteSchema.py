@@ -1,5 +1,4 @@
 # Modèles Pydantic pour les comptes
-from enum import Enum
 from typing import Optional, List
 
 from pydantic import BaseModel
@@ -23,18 +22,12 @@ class AccountsFetch(BaseModel):
     token : str  # À voir après si ça va fonctionner comme ça
 
 
-class AccountActionTypes(str, Enum):
-    """Enumeration des actions possibles sur un compte"""
-    READ = "read"
-    DELETE = "delete"
-
-
 # Modèle d'une requete pour effectuer une action sur un compte précis
 class AccountActions(BaseModel):
+    """Modèle d'une requete pour effectuer une action sur un compte précis"""
     user_id : int
     account_id : int
     token : str  #À revoir toujours
-    action : AccountActionTypes
 
 
 # Modèle de réponse d'une requete d'informations de compte
