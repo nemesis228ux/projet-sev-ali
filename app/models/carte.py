@@ -1,5 +1,5 @@
 from app.core.database import Base
-from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey, Double
+from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey
 from enum import Enum
 
 from .compte import Compte
