@@ -17,10 +17,16 @@ def create_user(user: UserCreate, db: Session) -> User:
   """
 
   hashed_passwd = hash_password(user.password)
-  db_user = User(
-    **user.model_dump(exclude={"password"}), 
-    hashed_password=hashed_passwd
-    ) ## on exclu password car ca n'existe pas dans db c'est plutot hashed_password
+  try:
+    
+    db_user = User(
+      **user.model_dump(exclude={"password"}), 
+      hashed_password=hashed_passwd
+      ) ## on exclu password car ca n'existe pas dans db c'est plutot hashed_password
+
+  except Exception as e:
+    print(f"Execption {e.__class__.__name__} : {e}")
+
 
   db.add(db_user)
   db.commit()

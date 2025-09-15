@@ -6,6 +6,9 @@ from enum import Enum
 
 from sqlalchemy.orm import relationship
 
+from app.models.transaction import Transaction
+from app.models.carte import Carte
+
 
 class AccountTypes(str, Enum):
     """Enumartions des types de compte possibles"""

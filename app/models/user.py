@@ -4,6 +4,9 @@ from sqlalchemy import Column, Integer, String, Enum as SqlEnum, Date, ForeignKe
 from enum import Enum as UserEnum
 from sqlalchemy.orm import relationship
 
+from app.models.banque import Banque
+from app.models.compte import Compte
+
 
 class UserRole(UserEnum):
   
