@@ -5,8 +5,6 @@ from typing import Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from uuid import uuid4
-from app.models import add_all_tables
-add_all_tables()
 
 def create_new_account(bd_session : Session, new_account_base : AccountCreate) -> Optional[Compte]:
     """
