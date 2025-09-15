@@ -23,21 +23,6 @@ class UserCreate(UserBase):
 
 
 
-class UserLogin(BaseModel):
-  """Modele pydantic pour valider les données au moment
-  du login
-
-  Args:
-      BaseModel (_type_): _description_
-  """
-
-  nom_user: str
-  email: EmailStr
-  password: str
-
-
-
-
 class UserUpdate(BaseModel):
   """Ceci est un model pydantic pr mettre a jour les infos d'un user
 
