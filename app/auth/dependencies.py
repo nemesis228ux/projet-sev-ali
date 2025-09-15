@@ -3,22 +3,32 @@
 from sqlalchemy.orm import Session
 from .jwt_handler import decode_access_token
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import status, HTTPException
+from fastapi import status, HTTPException, Depends
 from app.models.user import User
+from typing import Annotated
 
 
 ## modele de token// url permettant de creer token
-oauth_schema = OAuth2PasswordBearer(tokenUrl="/auth/login") 
+oauth_schema = OAuth2PasswordBearer(tokenUrl="/auth/login") ## indique ou trouver le token
 
 
-def get_current_user(token: str, db: Session):
+def get_current_user(token: Annotated[str, Depends(oauth_schema)], db: Session) -> User:
   """function permettant de return le user actuellement connecter.
   Elle sera utiliser pr securiser certaine routes en exigant le token
   d'authentificatiion obtenu lors du login
 
+
   Args:
-      token (str): prend le token recu
-      db (Session): return les infos de current user si token valide
+      token (Annotated[str, Depends): Extait directement le token dans le Header avec Bearer
+      db (Session): Une session de la db
+
+  Raises:
+      HTTPException: Token invalide ou expiré
+      HTTPException: Token invalide ou expiré
+      HTTPException: Cet utilisateur n'existe pas
+
+  Returns:
+      User: return un objet User qui est les infos de user actuellement connecter  
   """
 
   claims_data = decode_access_token(token=token)
