@@ -26,3 +26,8 @@ class User(Base):
   id_banque: int = Column(Integer, ForeignKey("banques.id_banque"), index=True, nullable=False)
 
   banque = relationship("Banque", back_populates="users")
+
+  comptes = relationship(
+      "Compte",
+      back_populates = "base_user"
+  )

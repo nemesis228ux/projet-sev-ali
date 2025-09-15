@@ -4,7 +4,8 @@ from passlib.context import CryptContext
 
 
 ## creation du context de hashage
-pwd_context = CryptContext(schemes=["bcrypt"], depecrated="auto") ## bcrypt est le type d'algorithme pour le hashage
+
+pwd_context = CryptContext(schemes=("bcrypt"), deprecated="auto") ## bcrypt est le type d'algorithme pour le hashage
 
 
 

@@ -1,5 +1,5 @@
 ### contient les models pydantic
-from pydantic import BaseModel, EmailStr, str
+from pydantic import BaseModel, EmailStr
 from app.models.user import UserRole
 from typing import Optional
 
@@ -20,6 +20,19 @@ class UserCreate(UserBase):
   
   password: str
 
+
+
+class UserLogin(BaseModel):
+  """Modele pydantic pour valider les données au moment
+  du login
+
+  Args:
+      BaseModel (_type_): _description_
+  """
+
+  nom_user: str
+  email: EmailStr
+  password: str
 
 
 
