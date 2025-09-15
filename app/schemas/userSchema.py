@@ -1,5 +1,5 @@
 ### contient les models pydantic
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, PastDate
 from app.models.user import UserRole
 from typing import Optional
 
@@ -63,7 +63,7 @@ class UserRead(BaseModel):
   nom_user: str
   email: EmailStr
   adresse: str
-  date_naissance: str
+  date_naissance: PastDate 
   role: UserRole = UserRole.client
   id_banque: int
   

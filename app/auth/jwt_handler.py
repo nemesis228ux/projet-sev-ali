@@ -6,7 +6,7 @@ from jose import jwt, JWTError
 
 
 
-def create_access_token(data_to_encode: dict, expire_delta: timedelta | None) -> str | dict[str, JWTError]:
+def create_access_token(data_to_encode: dict, expire_delta: timedelta | None = None) -> str | dict[str, JWTError]:
   """function pour generer un access token
 
   Args:

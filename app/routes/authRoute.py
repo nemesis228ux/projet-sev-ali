@@ -47,6 +47,6 @@ def user_login( login_user: UserLogin, db: Session = Depends(get_db) ) -> dict[s
       detail="Urilisateur non trouvé"
     )
     
-  token = create_access_token({"sub": str(db_user.id_user)})
+  token = create_access_token(data_to_encode={"sub": str(db_user.id_user)})
 
   return {"access_token": token, "token_type": "Bearer"}
