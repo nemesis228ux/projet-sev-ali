@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import Sequence
+from typing import Sequence, Optional
 from sqlalchemy import select
 from app.models.transaction import Transaction, TransactionTypes
 from app.schemas.transactionSchema import TransactionInit, TransactionResult
@@ -46,6 +46,22 @@ def get_user_transactions(
 
     return transactions
 
+def get_user_specific_transaction(
+        bd_session : Session,
+        user_id : int,
+        compte_id : int,
+        transaction_id : int
+) -> Optional[Transaction]:
+    # noinspection PyTypeChecker,PydanticTypeChecker
+    query = select(Transaction).where(Transaction.id_transac == transaction_id)
+    transac = bd_session.scalar(query)
+    if not transac:
+        return None
+    if transac.base_account.account_owner_id == user_id \
+            or \
+            get_account_by_id(bd_session, user_id, compte_id).numero_compte == transac.dest_num_compte:
+        return transac
+    return None
 
 class Transactor:
     def __init__(self, bd_session : Session, transac_info : TransactionInit):
