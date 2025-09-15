@@ -28,7 +28,7 @@ def get_all_banques(db: Session = Depends(get_db)) -> list[BanqueRead]:
 
 
 ## operation POST
-@router.post("/banques", response_model=BanqueRead)
+@router.post("/", response_model=BanqueRead)
 def create_a_banque(banque: BanqueCreate, db: Session = Depends(get_db)) -> BanqueRead:
     """route pour creer une banque
 
