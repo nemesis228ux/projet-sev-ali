@@ -49,22 +49,46 @@ def get_user_transactions(
 def get_user_specific_transaction(
         bd_session : Session,
         user_id : int,
-        compte_id : int,
+        account_id : int,
         transaction_id : int
 ) -> Optional[Transaction]:
+    """
+    Fonction pour obtenir une transaction spécifique
+    Args:
+        bd_session: Instance de bd
+        user_id: Id de l'utilisateur
+        account_id: Id du compte
+        transaction_id: Id de la transaction recherchée
+
+    Returns:
+        type: La transaction si elle est trouvée et appartient à l'utilisateur
+    """
     # noinspection PyTypeChecker,PydanticTypeChecker
     query = select(Transaction).where(Transaction.id_transac == transaction_id)
-    transac = bd_session.scalar(query)
-    if not transac:
+    transac = bd_session.scalar(query)      # On recuperere la transac
+    if not transac:     # La teansaction n'existe pas
         return None
+
+    # On vérifie si l'utilisateur est bien impliqué dans la transaction
     if transac.base_account.account_owner_id == user_id \
             or \
-            get_account_by_id(bd_session, user_id, compte_id).numero_compte == transac.dest_num_compte:
+            get_account_by_id(bd_session, user_id, account_id).numero_compte == transac.dest_num_compte:
         return transac
+
+    #Cas où l'user n'est pas impliqué dans la transac
     return None
 
 class Transactor:
+    """Classe utilitaire pour gérer les transactions easily"""
     def __init__(self, bd_session : Session, transac_info : TransactionInit):
+        """
+        Instanciateur de l'objet de transaction
+        Args:
+            bd_session: instance de la bdd
+            transac_info: Infos relatives à la transac
+        """
+
+        # On récupère toutes les infos nécessaires en attributs privés
         self.__bd_session: Session = bd_session
         self.__iniatior_id: int = transac_info.user_id
         self.__iniatior_account_id: int = transac_info.account_id
@@ -73,6 +97,11 @@ class Transactor:
         self.__destinator_num_compte: str = transac_info.destinator_num_compte
 
     def __withdraw_transac(self) -> tuple[bool, str | None]:
+        """
+        Fonction interne pour effectuer un retrait, agit directement avec les attributs de l'objet en interne
+        Returns:
+            type: Un tuple avec le resultat et un message d'erreur au cas où l'op a échioué
+        """
         try:
             account = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
             solde = account.solde
@@ -80,56 +109,77 @@ class Transactor:
                 return False, "Solde insuffisant pour le retrait"
             new_solde = solde - self.__transaction_amount
             account.solde = new_solde
-            self.__bd_session.commit()
+            self.__bd_session.commit()      # On met tout à jour
             return True, None
         except Exception as e:
-            exc = f'Exception {e.__class__.__name__} : {e}'
+            exc = f'Exception {e.__class__.__name__} : {e}'     # La trace de l'éxception
             return False, exc
 
     def __deposit_transac(self) -> tuple[bool, str | None]:
+        """
+        Fonction interne pour effectuer un dépot, aagit directement avec les attributs de l'objet en interne
+        Returns:
+            type: Un tuple avec le resultat et un message d'erreur au cas où l'op a échioué
+        """
         try:
             compte = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
             current_solde = compte.solde
             compte.solde = current_solde + self.__transaction_amount
-            self.__bd_session.commit()
+            self.__bd_session.commit()      # On met tout a jour
             return True, None
         except Exception as e:
-            exc = f'Exception {e.__class__.__name__} : {e}'
+            exc = f'Exception {e.__class__.__name__} : {e}'         # La trace de l'éxception
             return False, exc
 
     def __transfer_transac(self) -> tuple[bool, str | None]:
+        """
+        Fonction interne pour effectuer une transaction, agit directement avec les attributs de l'objet en interne
+        Returns:
+            type: Un tuple avec le resultat et un message d'erreur au cas où l'op a échioué
+        """
         try:
+            # On recupere le compte du sender
             sender_account = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
-            if not sender_account:
-                return False, "Le compte spécifié n'esxiste pas"
 
+            if not sender_account:      # Cas où le compte est inexistantt
+                return False, "Le compte spécifié n'esxiste pas"
 
             sender_solde = sender_account.solde
             if sender_solde < self.__transaction_amount:
                 return False, "Vous n'avez pas suffisament de fonds"
 
+            # On recupere le compte du receiver
             receiver_account = get_account_by_numero_compte(self.__bd_session, self.__destinator_num_compte)
-            if not receiver_account:
+
+            if not receiver_account:      # Cas où le compte est inexistantt
                 return False, "Le numéro de compte n'est pas valide"
 
 
+            # Transaction des fonds
             sender_account.solde = sender_solde - self.__transaction_amount
             receiver_account.solde += self.__transaction_amount
 
-            self.__bd_session.commit()
+            self.__bd_session.commit()      # On met tout à jour
 
             return True, None
 
 
         except Exception as e:
-            exc = f'Exception {e.__class__.__name__} : {e}'
+            exc = f'Exception {e.__class__.__name__} : {e}'     # Cause de l'exception
             return False, exc
 
     def launch_transaction(self) -> TransactionResult:
+        """
+        Fonction principale pour lancer une transaction après avoir instancié l'objet
+        Returns:
+            type: Le resultat de la transaction
+
+        """
         transac_type = self.__transaction_type
         success = False
         message = None
-        match transac_type:
+
+        match transac_type:     # SELON sur le type de transaction
             case TransactionTypes.DEPOT:
                 success, message = self.__deposit_transac()
             case TransactionTypes.RETRAIT:
@@ -137,14 +187,14 @@ class Transactor:
             case TransactionTypes.TRANSFERT:
                 success, message = self.__transfer_transac()
 
-        if success:
+        if success:     # On ajoute la transaction seulement en cas de succès
             transaction = Transaction(
                 initiator_account_id=self.__iniatior_account_id,
                 dest_num_compte=self.__destinator_num_compte,
                 type_transac=transac_type,
                 montant=self.__transaction_amount
             )
-            self.__bd_session.add(transaction)
-            self.__bd_session.commit()
+            self.__bd_session.add(transaction)      # Ajout de la transac
+            self.__bd_session.commit()              # Mise à jour effective des data
 
         return TransactionResult(success=success, error=message)
