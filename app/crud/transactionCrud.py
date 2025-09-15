@@ -49,22 +49,22 @@ def get_user_transactions(
 
 class Transactor:
     def __init__(self, bd_session : Session, transac_info : TransactionInit):
-        self.bd_session: Session = bd_session
-        self.iniatior_id: int = transac_info.user_id
-        self.iniatior_account_id: int = transac_info.account_id
-        self.transaction_type: TransactionTypes = transac_info.transaction_type
-        self.transaction_amount: float = transac_info.amount
-        self.destinator_num_compte: str = transac_info.destinator_num_compte
+        self.__bd_session: Session = bd_session
+        self.__iniatior_id: int = transac_info.user_id
+        self.__iniatior_account_id: int = transac_info.account_id
+        self.__transaction_type: TransactionTypes = transac_info.transaction_type
+        self.__transaction_amount: float = transac_info.amount
+        self.__destinator_num_compte: str = transac_info.destinator_num_compte
 
     def __withdraw_transac(self) -> tuple[bool, str | None]:
         try:
-            account = get_account_by_id(self.bd_session, self.iniatior_id, self.iniatior_account_id)
+            account = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
             solde = account.solde
-            if self.transaction_amount > solde:
+            if self.__transaction_amount > solde:
                 return False, "Solde insuffisant pour le retrait"
-            new_solde = solde - self.transaction_amount
+            new_solde = solde - self.__transaction_amount
             account.solde = new_solde
-            self.bd_session.commit()
+            self.__bd_session.commit()
             return True, None
         except Exception as e:
             exc = f'Exception {e.__class__.__name__} : {e}'
@@ -72,10 +72,10 @@ class Transactor:
 
     def __deposit_transac(self) -> tuple[bool, str | None]:
         try:
-            compte = get_account_by_id(self.bd_session, self.iniatior_id, self.iniatior_account_id)
+            compte = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
             current_solde = compte.solde
-            compte.solde = current_solde + self.transaction_amount
-            self.bd_session.commit()
+            compte.solde = current_solde + self.__transaction_amount
+            self.__bd_session.commit()
             return True, None
         except Exception as e:
             exc = f'Exception {e.__class__.__name__} : {e}'
@@ -83,20 +83,24 @@ class Transactor:
 
     def __transfer_transac(self) -> tuple[bool, str | None]:
         try:
-            receiver_account = get_account_by_numero_compte(self.bd_session, self.destinator_num_compte)
+            sender_account = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
+            if not sender_account:
+                return False, "Le compte spécifié n'esxiste pas"
+
+
+            sender_solde = sender_account.solde
+            if sender_solde < self.__transaction_amount:
+                return False, "Vous n'avez pas suffisament de fonds"
+
+            receiver_account = get_account_by_numero_compte(self.__bd_session, self.__destinator_num_compte)
             if not receiver_account:
                 return False, "Le numéro de compte n'est pas valide"
 
-            sender_account = get_account_by_id(self.bd_session, self.iniatior_id, self.iniatior_account_id)
 
-            sender_solde = sender_account.solde
-            if sender_solde < self.transaction_amount:
-                return False, "Vous n'avez pas suffisament de fonds"
+            sender_account.solde = sender_solde - self.__transaction_amount
+            receiver_account.solde += self.__transaction_amount
 
-            sender_account.solde = sender_solde - self.transaction_amount
-            receiver_account.solde += self.transaction_amount
-
-            self.bd_session.commit()
+            self.__bd_session.commit()
 
             return True, None
 
@@ -106,7 +110,7 @@ class Transactor:
             return False, exc
 
     def launch_transaction(self) -> TransactionResult:
-        transac_type = self.transaction_type
+        transac_type = self.__transaction_type
         success = False
         message = None
         match transac_type:
@@ -118,13 +122,13 @@ class Transactor:
                 success, message = self.__transfer_transac()
 
         if success:
-            transac = Transaction(
-                initiator_account_id=self.iniatior_account_id,
-                dest_num_compte=self.destinator_num_compte,
+            transaction = Transaction(
+                initiator_account_id=self.__iniatior_account_id,
+                dest_num_compte=self.__destinator_num_compte,
                 type_transac=transac_type,
-                montant=self.transaction_amount
+                montant=self.__transaction_amount
             )
-            self.bd_session.add(transac)
-            self.bd_session.commit()
+            self.__bd_session.add(transaction)
+            self.__bd_session.commit()
 
         return TransactionResult(success=success, error=message)
