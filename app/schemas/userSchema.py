@@ -2,6 +2,7 @@
 from pydantic import BaseModel, EmailStr, PastDate
 from app.models.user import UserRole
 from typing import Optional
+from datetime import date
 
 
 class UserBase(BaseModel):
@@ -9,7 +10,7 @@ class UserBase(BaseModel):
   nom_user: str
   email: EmailStr
   adresse: str
-  date_naissance: str
+  date_naissance: PastDate
   role: UserRole = UserRole.client
   id_banque: int
 
@@ -50,6 +51,7 @@ class UserUpdate(BaseModel):
   role: Optional[UserRole] = None
   id_banque: Optional[int] = None
 
+  
 
 
 
@@ -65,7 +67,7 @@ class UserRead(BaseModel):
   nom_user: str
   email: EmailStr
   adresse: str
-  date_naissance: PastDate 
+  date_naissance: date 
   role: UserRole = UserRole.client
   id_banque: int
   

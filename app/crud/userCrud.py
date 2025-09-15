@@ -71,7 +71,7 @@ def update_user_using_email(user_email: str, user_data: UserUpdate, db: Session)
   """
 
 
-  db_user = get_user_using_email(user_email=user_email)
+  db_user = get_user_using_email(user_email=user_email, db=db)
   
   if db_user is None:
     return None
@@ -113,7 +113,13 @@ def delete_user(user_id: int, db: Session) -> User | None:
   db_user = get_user_using_id(user_id=user_id, db=db)
 
   if db_user is not None:
-    db.delete(db_user)
-    db.commit()
+    
+    try:
+      
+      db.delete(db_user)
+      db.commit()
+
+    except Exception as e:
+      print(f"Exception {e.__class__.__name__}: {e}")
 
   return db_user
