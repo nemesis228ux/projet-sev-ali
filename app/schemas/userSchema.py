@@ -14,10 +14,27 @@ class UserBase(BaseModel):
   id_banque: int
 
 
+
 class UserCreate(UserBase):
   """Model pydantic pr valider le creation d'un user"""
   
   password: str
+
+
+
+
+class UserLogin(BaseModel):
+  """Modele pydantic pour valider les données au moment
+  du login
+
+  Args:
+      BaseModel (_type_): _description_
+  """
+
+  nom_user: str
+  email: EmailStr
+  password: str
+
 
 
 
@@ -34,6 +51,7 @@ class UserUpdate(BaseModel):
   date_naissance: Optional[str] = None
   role: Optional[UserRole] = None
   id_banque: Optional[int] = None
+
 
 
 
