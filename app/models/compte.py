@@ -1,13 +1,9 @@
 # Contient le model sqlalchemy de la table compte
-from typing import List
-
 from app.core.database import Base
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey, Double
 from sqlalchemy.sql import func
 from enum import Enum
 
-from .transaction import Transaction
-from .user import User
 from sqlalchemy.orm import relationship
 
 
@@ -32,7 +28,7 @@ class Compte(Base):
     )
 
     numero_compte: str = Column(  # A revoir en str pour plus de simplicité ou en int
-        String,
+        String(16),
         unique=True,
         nullable=False,
         index=True
@@ -61,16 +57,19 @@ class Compte(Base):
         index=True
     )
 
-    base_user: User = relationship(
+    base_user = relationship(
         "User",
         back_populates="comptes",
         uselist=False
     )
 
-    transactions: List[Transaction] = relationship(
+    transactions = relationship(
         "Transaction",
         back_populates="base_account"
     )
 
-
-    #TODO : Ajouter une relationship pour les cb quand ali aura terminé
+    carte = relationship(
+        "Carte",
+        back_populates="base_account",
+        uselist=False
+    )

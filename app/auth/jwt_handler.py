@@ -1,12 +1,12 @@
 ## fichierr jwt_handler pour creer et decoder access token
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRES_MINUTES
 from jose import jwt, JWTError
 
 
 
-def create_access_token(data_to_encode: dict, expire_delta: timedelta | None) -> str:
+def create_access_token(data_to_encode: dict, expire_delta: timedelta | None) -> str | dict[str, JWTError]:
   """function pour generer un access token
 
   Args:
@@ -22,7 +22,7 @@ def create_access_token(data_to_encode: dict, expire_delta: timedelta | None) ->
 
   to_encode = data_to_encode.copy()  ## on realise une copy des elements avec lesquels on veut travailler
 
-  expiration = datetime.utcnow() + (
+  expiration = datetime.now(UTC) + (        #L'autre methode etait deprecated
     expire_delta  or timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTES)
   ) ## donc ici on prend l'heure actuel + la durée du token pour avoir l'heure d'expiration
 
