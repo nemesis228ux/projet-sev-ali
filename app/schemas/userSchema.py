@@ -1,5 +1,5 @@
 ### contient les models pydantic
-from pydantic import BaseModel, EmailStr, str
+from pydantic import BaseModel, EmailStr
 from app.models.user import UserRole
 from typing import Optional
 
