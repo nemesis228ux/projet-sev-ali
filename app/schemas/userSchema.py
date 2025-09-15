@@ -22,7 +22,6 @@ class UserCreate(UserBase):
 
 
 
-
 class UserLogin(BaseModel):
   """Modele pydantic pour valider les données au moment
   du login
@@ -34,7 +33,6 @@ class UserLogin(BaseModel):
   nom_user: str
   email: EmailStr
   password: str
-
 
 
 
