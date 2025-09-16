@@ -33,7 +33,7 @@ class Transaction(Base):
         nullable=True       #NULL en cas de dépotou retrait. Ou soit on remet juste l'id du compte de l'user
     )
 
-    type_transac: str = Column(
+    type_transac: TransactionTypes = Column(
         SqlEnum(TransactionTypes),
         index=True,
         nullable=False

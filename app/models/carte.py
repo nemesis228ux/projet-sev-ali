@@ -33,7 +33,7 @@ class Carte(Base):
         nullable=False
     )
 
-    type_carte : str = Column(
+    type_carte : CarteTypes = Column(
         SqlEnum(CarteTypes),
         nullable=False
     )

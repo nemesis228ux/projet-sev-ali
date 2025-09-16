@@ -4,8 +4,7 @@ from app.schemas.compteSchema import AccountCreate
 from typing import Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from uuid import uuid4
-
+from app.utils.generator import generate_random_number
 def create_new_account(bd_session : Session, new_account_base : AccountCreate) -> Optional[Compte]:
     """
     Fonctionn pour ajjouter un utilisateur à la base de données
@@ -26,7 +25,7 @@ def create_new_account(bd_session : Session, new_account_base : AccountCreate) -
 
     while True:
         try:
-            random_num_compte = uuid4().int.__str__()[:16]      # Pour générer un numéro de compte aléatoire
+            random_num_compte = generate_random_number(size=16)      # Pour générer un numéro de compte aléatoire
             new_account.numero_compte = random_num_compte
             bd_session.add(new_account)
             bd_session.commit()
@@ -34,13 +33,12 @@ def create_new_account(bd_session : Session, new_account_base : AccountCreate) -
             return new_account
 
         except IntegrityError:      # Cas ou le numéro de compte est déja présent
-            bd_session.rollback()
-            new_account.numero_compte = uuid4().int.__str__()[:16]
+            bd_session.rollback()      # Reset des dernières modifications
             continue
 
         except Exception as e:
             print(f'Exception {e.__class__.__name__} : {e}')
-            break
+            return None
 
 def delete_user_account(bd_session : Session, user_id : int, account_id : int) -> bool:
     """

@@ -36,7 +36,7 @@ class Compte(Base):
         index=True
     )
 
-    type_compte: str = Column(
+    type_compte: AccountTypes = Column(
         SqlEnum(AccountTypes),
         default=AccountTypes.COURANT,
         nullable=False
@@ -73,5 +73,4 @@ class Compte(Base):
     cartes = relationship(
         "Carte",
         back_populates="base_account",
-        uselist=False
     )
