@@ -71,6 +71,7 @@ def update_user_using_email(user_email: str, user_data: UserUpdate, db: Session)
   """
 
 
+
   db_user = get_user_using_email(user_email=user_email, db=db)
   
   if db_user is None:

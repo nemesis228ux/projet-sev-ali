@@ -5,8 +5,8 @@ from typing import Optional
 from datetime import date
 
 
+
 class UserBase(BaseModel):
-  
   nom_user: str
   email: EmailStr
   adresse: str
@@ -21,8 +21,6 @@ class UserCreate(UserBase):
   
   password: str
 
-
-
 class UserLogin(BaseModel):
   """Modele pydantic pour valider les données au moment
   du login
@@ -34,8 +32,6 @@ class UserLogin(BaseModel):
   nom_user: str
   email: EmailStr
   password: str
-
-
 
 class UserUpdate(BaseModel):
   """Ceci est un model pydantic pr mettre a jour les infos d'un user
@@ -50,10 +46,6 @@ class UserUpdate(BaseModel):
   date_naissance: Optional[str] = None
   role: Optional[UserRole] = None
   id_banque: Optional[int] = None
-
-  
-
-
 
 class UserRead(BaseModel):
   """Model pydantic pour valider la sortie des données pour ue

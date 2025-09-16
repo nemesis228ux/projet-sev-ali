@@ -1,12 +1,15 @@
 from fastapi import FastAPI
-
 from app.routes import authRoute
+from app.routes import banqueRoute
 from app.routes import userRoute
 
 
 app = FastAPI()
 
 app.include_router(authRoute.router)
+
+app.include_router(banqueRoute.router)
+
 app.include_router(userRoute.router)
 
 

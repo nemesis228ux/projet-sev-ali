@@ -1,6 +1,8 @@
 # contient les routes : les endpoints sur user
 
+
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query, Path, status, HTTPException
 from sqlalchemy.orm import Session
 from app.schemas.userSchema import UserRead, UserUpdate
@@ -25,6 +27,7 @@ def get_all_users(db: Session = Depends(get_db)) -> list[UserRead]:
 
 
 ## operation GET un user a partir de son email
+
 @router.get("/email", response_model=UserRead)
 def read_user_by_email(
   search: str = Query(description="Email qui va permettre de trouver user"), 
@@ -47,6 +50,7 @@ def read_user_by_email(
 
 
 ## operation GET user by id
+
 @router.get("/{user_id}", response_model=UserRead)
 def get_user_by_id(
   user_id: int = Path(..., description="ID de user rechercher"), 
