@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, Forei
 from enum import Enum
 
 from sqlalchemy.orm import relationship
-
+from datetime import datetime
 class CarteTypes(str, Enum):
     VISA = "visa"
     MASTERCARD = "mastercard"
@@ -16,7 +16,8 @@ class Carte(Base):
     id_carte : int = Column(
         Integer,
         primary_key=True,
-        index=True
+        index=True,
+        autoincrement=True
     )
 
     numero_carte : str = Column(
@@ -37,7 +38,7 @@ class Carte(Base):
         nullable=False
     )
 
-    date_expiration : str = Column(
+    date_expiration : datetime = Column(
         DateTime,
         nullable=False,
         index=True
@@ -51,6 +52,6 @@ class Carte(Base):
 
     base_account = relationship(
         "Compte",
-        back_populates='carte',
+        back_populates='cartes',
         uselist=False
     )

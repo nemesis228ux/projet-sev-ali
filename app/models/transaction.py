@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, Enum as SqlEnum, DateTime, ForeignKey, D
 from sqlalchemy.sql import func
 from enum import Enum
 from sqlalchemy.orm import relationship
-
+from datetime import datetime
 
 class TransactionTypes(str, Enum):
     TRANSFERT = "transfert"
@@ -45,7 +45,7 @@ class Transaction(Base):
         nullable=False
     )
 
-    date_transaction: str = Column(
+    date_transaction: datetime = Column(
         DateTime,
         default=func.now()
     )
