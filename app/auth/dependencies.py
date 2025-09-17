@@ -59,4 +59,28 @@ def get_current_user(token: Annotated[str, Depends(oauth_schema)], db: Session) 
 
   return user
 
-#TODO: ajouter dependence pour voir si c'est admin ou user simple
+
+
+
+def isAdmin(current_user: User = Depends(get_current_user)) -> User:
+  """function pour restraindre les accès uniquement aux admis
+
+  Args:
+      current_user (User, optional): recuperere les infos de current_user. Defaults to Depends(get_current_user).
+
+  Raises:
+      HTTPException: lever une exection si c'est pas un admin
+
+  Returns:
+      User: return tjrs les infos de current_user
+  """
+
+  if current_user.role !="admin" :
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Accès reservé uniquement aux administrateurs"
+    )
+    
+  return current_user
+
+  
