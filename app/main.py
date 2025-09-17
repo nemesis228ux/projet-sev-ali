@@ -3,6 +3,8 @@ from app.routes import authRoute
 from app.routes import banqueRoute
 from app.routes import userRoute
 
+from app.models import add_all_tables
+add_all_tables()
 
 app = FastAPI()
 
