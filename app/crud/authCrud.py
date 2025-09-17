@@ -3,6 +3,7 @@ from app.schemas.userSchema import UserCreate
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.utils.security import hash_password
+from fastapi import status, HTTPException
 
 
 def create_user(user: UserCreate, db: Session) -> User:
@@ -24,12 +25,17 @@ def create_user(user: UserCreate, db: Session) -> User:
       hashed_password=hashed_passwd
       ) ## on exclu password car ca n'existe pas dans db c'est plutot hashed_password
 
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user) ## mettre a jour id_user avant de retourner user
+
+    return db_user
+
   except Exception as e:
     print(f"Execption {e.__class__.__name__} : {e}")
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail="Erreur lors de la creation de l'utilisateur"
+    )
 
-
-  db.add(db_user)
-  db.commit()
-  db.refresh(db_user) ## mettre a jour id_user avant de retourner user
-
-  return db_user
+  
