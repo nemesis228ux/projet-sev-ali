@@ -29,6 +29,7 @@ def create_account(
     user_id : int = Depends(get_current_user_id),
     bd_session : Session = Depends(get_db)
 ) -> AccountView:
+
     """Route pour la création d'un nouveau compte"""
     new_account = create_new_account(bd_session, body, user_id)
     return AccountView.success_response(new_account)
@@ -40,6 +41,7 @@ def get_user_all_accounts(
     user_id : int = Depends(get_current_user_id),
     bd_session : Session = Depends(get_db)
 ) -> AccountsView:
+    """Route pour récuperer tous les comptes d'un user"""
     accounts = get_user_accounts(bd_session, user_id, account_type)
     return AccountsView.success_response(accounts)
 

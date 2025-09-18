@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, Field
 from ..models.compte import AccountTypes
-from .baseSchema import BaseResponse
+from .baseSchema import ApiBaseResponse
 from datetime import datetime
 
 #TODO : Reajuster les modele plus tard en fonction du system d'authentification finale (Token ou user_id brut)
@@ -19,7 +19,7 @@ class AccountActions(BaseModel):
     """Modèle d'une requete pour effectuer une action sur un compte précis"""
     account_id : int = Field(..., description="Id du compte sur laquelle l'action doit etre effectuée")
 
-class ActionResult(BaseResponse):
+class ActionResult(ApiBaseResponse):
     result : Optional[str] = Field(None, description="Le resultat de l'action")
 
 class AccountInfo(BaseModel):
@@ -33,11 +33,11 @@ class AccountInfo(BaseModel):
     class Config:
         from_attributes = True
 
-class AccountView(BaseResponse):
+class AccountView(ApiBaseResponse):
     """Modèle de réponse d'une requete d'informations de compte"""
     result: Optional[AccountInfo] = Field(None, description="Le compte recherché")
 
 
-class AccountsView(BaseResponse):
+class AccountsView(ApiBaseResponse):
     """Modèle de réponse d'une requete d'informations de plusieurs comptes"""
     result: Optional[List[AccountInfo]] = Field(None, description='Les comptes recherchés')
