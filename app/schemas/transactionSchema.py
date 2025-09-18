@@ -25,19 +25,9 @@ class DepotTransac(TransactionBase):
     pass
 
 
-
-
-
-class TransactionActions(BaseModel):
-    """Modèle d'une requetes pour effectuer une action (Voir, supprimer, annulé...) sur une transactiion"""
-    account_id: int
-    transaction_id: int
-
 class TransactionsFetch(BaseModel):
     """Modèle d'une requetes pour recuperer toutes les transactions d'un Account"""
     account_id: int
-
-
 
 class TransactionInfo(BaseModel):
     """Modèle de reponse d'une requete de visualisation de transaction"""
@@ -52,17 +42,21 @@ class TransactionInfo(BaseModel):
         from_attributes = True
 
 class TransactionResult(BaseModel):
-    """Modèle de reponse d'une requete de transaction"""
+    """Modèle de base d'une transaction"""
     success : bool
     error : Optional[str] = None
     transac : Optional[TransactionInfo] = None
 
 class TransactionView(ApiBaseResponse):
     """Modèle de reponse d'une requete de visualisation d'une seule transaction"""
+
+    # Surcharge sur l'attribut result pour pouvoir spécifier la bonne donnée à valider
     result: Optional[TransactionInfo] = None
 
 
 class TransactionsView(ApiBaseResponse):
     """Modèle de reponse d'une requete de visualisation de toutes les transactions d'un compte"""
+
+    # Surcharge sur l'attribut result pour pouvoir spécifier la bonne donnée à valider
     result: Optional[List[TransactionInfo]] = None
 

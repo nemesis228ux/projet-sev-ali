@@ -52,9 +52,10 @@ def do_a_transfert(
     )
     result = transactor.launch_transaction()
 
-    if result.success:
+    if result.success:      # Reponse de succes si la transac a réussi
         return TransactionView.success_response(result.transac)
-    return TransactionView.error_response(result.error)
+
+    return TransactionView.error_response(result.error)  # La transac n'a pas réussi donc on renvoi une reponse d'erreur
 
 @router.post("/retrait", response_model=TransactionView)
 def do_a_retrait(
@@ -73,9 +74,10 @@ def do_a_retrait(
     )
     result = transactor.launch_transaction()
 
-    if result.success:
+    if result.success:      # Reponse de succes si la transac a réussi
         return TransactionView.success_response(result.transac)
-    return TransactionView.error_response(result.error)
+
+    return TransactionView.error_response(result.error) # La transac n'a pas réussi donc on renvoi une reponse d'erreur
 
 
 @router.post("/depot", response_model=TransactionView)
@@ -95,9 +97,10 @@ def do_a_depot(
     )
     result = transactor.launch_transaction()
 
-    if result.success:
+    if result.success:      # Reponse de succes si la transac a réussi
         return TransactionView.success_response(result.transac)
-    return TransactionView.error_response(result.error)
+
+    return TransactionView.error_response(result.error) # La transac n'a pas réussi donc on renvoi une reponse d'erreur
 
 @router.get('/{transac_id}', response_model=TransactionView)
 def see_a_transaction(

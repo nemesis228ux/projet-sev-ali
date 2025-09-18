@@ -19,6 +19,7 @@ def get_all_accounts(
     account_type : Optional[AccountTypes] = Query(None, description='Param de requete otionnelle pour filtrer les comptes'),
     bd_session : Session = Depends(get_db)
 ) -> AccountsView:
+
     """Route pour recupérer tous les comptes de la bd"""
     acconts = get_accounts(bd_session, account_type)
     return AccountsView.success_response(acconts)
@@ -41,6 +42,7 @@ def get_user_all_accounts(
     user_id : int = Depends(get_current_user_id),
     bd_session : Session = Depends(get_db)
 ) -> AccountsView:
+
     """Route pour récuperer tous les comptes d'un user"""
     accounts = get_user_accounts(bd_session, user_id, account_type)
     return AccountsView.success_response(accounts)
@@ -52,6 +54,7 @@ def get_an_account(
     user_id : int = Depends(get_current_user_id),
     bd_session : Session = Depends(get_db)
 ) -> AccountView:
+
     """Route pour récuperer des infos sur un compte précis"""
     account = get_account_by_id(bd_session, user_id, account_id)
     return AccountView.success_response(account)
@@ -62,6 +65,7 @@ def delete_account(
     user_id : int = Depends(get_current_user_id),
     bd_session : Session = Depends(get_db)
 ) -> AccountView:
+
     """Route pour supprimer un compte précis"""
     delete_user_account(bd_session, user_id, account_id)
     return ActionResult.success_response("Compte supprimé avec succès")

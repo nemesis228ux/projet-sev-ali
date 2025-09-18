@@ -20,9 +20,11 @@ class AccountActions(BaseModel):
     account_id : int = Field(..., description="Id du compte sur laquelle l'action doit etre effectuée")
 
 class ActionResult(ApiBaseResponse):
+    """Modèle de réponse d'une requete d'action sur un compte"""
     result : Optional[str] = Field(None, description="Le resultat de l'action")
 
 class AccountInfo(BaseModel):
+    """Modèle de base d'un compte"""
     id_compte : int
     numero_compte : str
     type_compte : AccountTypes
@@ -35,9 +37,13 @@ class AccountInfo(BaseModel):
 
 class AccountView(ApiBaseResponse):
     """Modèle de réponse d'une requete d'informations de compte"""
+
+    # Surcharge sur l'attribut result pour pouvoir spécifier la bonne donnée à valider
     result: Optional[AccountInfo] = Field(None, description="Le compte recherché")
 
 
 class AccountsView(ApiBaseResponse):
     """Modèle de réponse d'une requete d'informations de plusieurs comptes"""
+
+    # Surcharge sur l'attribut result pour pouvoir spécifier la bonne donnée à valider
     result: Optional[List[AccountInfo]] = Field(None, description='Les comptes recherchés')
