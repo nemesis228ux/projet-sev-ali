@@ -5,20 +5,22 @@ from typing import Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from app.utils.generator import generate_random_number
-def create_new_account(bd_session : Session, new_account_base : AccountCreate) -> Optional[Compte]:
+
+def create_new_account(bd_session : Session, new_account_base : AccountCreate, user_id : int) -> Optional[Compte]:
     """
     Fonctionn pour ajjouter un utilisateur à la base de données
 
     Args:
         bd_session: Instance de la bd
         new_account_base: Informations de bases sur le nouveau compte à créer
+        user_id: Id de l'user
 
     Returns:
         type: Le compte crée si l'opération a reussi
     """
 
     new_account = Compte(
-        account_owner_id=new_account_base.user_id,
+        account_owner_id=user_id,
         solde=new_account_base.initial_amount,
         type_compte=new_account_base.account_type
     )
@@ -57,6 +59,11 @@ def delete_user_account(bd_session : Session, user_id : int, account_id : int) -
         if not account:
             return False
 
+        # On doit aussi supprimer les cartes liés au compte
+        cartes = account.cartes
+        for carte in cartes:
+            bd_session.delete(carte)
+
         bd_session.delete(account)
         bd_session.commit()
         return True
@@ -64,7 +71,7 @@ def delete_user_account(bd_session : Session, user_id : int, account_id : int) -
         print(f'Exception {e.__class__.__name__} : {e}')
         return False
 
-def get_all_accounts(bd_session: Session, account_type : Optional[AccountTypes] = None) -> Sequence[Compte]:
+def get_accounts(bd_session: Session, account_type : Optional[AccountTypes] = None) -> Sequence[Compte]:
     """
     Fonction pour recuperer tous les comptes de la bd, avec possibilité de filtrage par type de compte
 
@@ -129,10 +136,10 @@ def get_account_by_id(bd_session : Session, user_id : int, account_id : int) -> 
 
     # noinspection PyTypeChecker,PydanticTypeChecker
     query = select(Compte).where(
-        Compte.account_owner_id == user_id,
-        Compte.id_compte == account_id
+        Compte.id_compte == account_id,
+        Compte.account_owner_id == user_id
     )
-    return bd_session.scalars(query).first()
+    return bd_session.scalar(query)
 
 def get_account_by_numero_compte(bd_session : Session, num_compte : str) -> Optional[Compte]:
     """
@@ -150,4 +157,4 @@ def get_account_by_numero_compte(bd_session : Session, num_compte : str) -> Opti
     query = select(Compte).where(
         Compte.numero_compte == num_compte,
     )
-    return bd_session.scalars(query).first()
+    return bd_session.scalar(query)

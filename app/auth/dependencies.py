@@ -61,6 +61,41 @@ def get_current_user(token: Annotated[str, Depends(oauth_schema)], db: Session =
   return user
 
 
+def get_current_user_id(token: Annotated[str, Depends(oauth_schema)]) -> int:
+    """
+    Fonction  pour récuperer le user_id directement depuis le token des entete HHTTP
+
+    Args:
+        token (Annotated[str, Depends): Extait directement le token dans le Header avec Bearer
+
+    Raises:
+        HTTPException: Token invalide ou expiré
+        HTTPException: Token invalide ou expiré
+        HTTPException: Cet utilisateur n'existe pas
+
+    Returns:
+        int: L'id contenu dans le Token
+    """
+
+    claims_data = decode_access_token(token=token)
+
+    if claims_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide ou expiré",
+            headers={"www-Authenticate": "Bearer"}
+        )
+
+    user_id = claims_data.get("sub")  ## on avait use user_id pr encoder donc on peut le recuperer ici en str
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide ou expiré",
+            headers={"www-Authenticate": "Bearer"}
+        )
+
+    return int(user_id)
 
 
 def isAdmin(current_user: User = Depends(get_current_user)) -> User:
@@ -84,4 +119,4 @@ def isAdmin(current_user: User = Depends(get_current_user)) -> User:
     
   return current_user
 
-  
+
