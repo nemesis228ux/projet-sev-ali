@@ -4,6 +4,7 @@ from app.routes import banqueRoute
 from app.routes import userRoute
 from app.routes.compteRoute import router as compte_routes
 from app.routes.transactionRoute import router as transaction_routes
+
 from app.models import add_all_tables
 add_all_tables()
 

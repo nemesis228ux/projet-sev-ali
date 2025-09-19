@@ -6,18 +6,20 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Path, status, HTTPException
 from sqlalchemy.orm import Session
 from app.schemas.userSchema import UserRead, UserUpdate
+from app.models.user import User
 from app.core.database import get_db
 from app.crud.userCrud import (
   get_user_using_email, get_user_using_id, get_users, 
   update_user_using_email, delete_user
 )
+from app.auth.dependencies import get_current_user, isAdmin
 
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 ## operation GET all users
-@router.get("/", response_model=list[UserRead])
+@router.get("/", dependencies=[Depends(get_current_user)], response_model=list[UserRead])
 def get_all_users(db: Session = Depends(get_db)) -> list[UserRead]:
   """routes pour avoir tous les utilisateurs"""
 
@@ -28,7 +30,7 @@ def get_all_users(db: Session = Depends(get_db)) -> list[UserRead]:
 
 ## operation GET un user a partir de son email
 
-@router.get("/email", response_model=UserRead)
+@router.get("/email", dependencies=[Depends(get_current_user)], response_model=UserRead)
 def read_user_by_email(
   search: str = Query(description="Email qui va permettre de trouver user"), 
   db: Session = Depends(get_db)
@@ -51,7 +53,7 @@ def read_user_by_email(
 
 ## operation GET user by id
 
-@router.get("/{user_id}", response_model=UserRead)
+@router.get("/{user_id}", dependencies=[Depends(get_current_user)], response_model=UserRead)
 def get_user_by_id(
   user_id: int = Path(..., description="ID de user rechercher"), 
   db: Session = Depends(get_db)
@@ -71,7 +73,7 @@ def get_user_by_id(
 
 
 ## update un user en utilisant son email
-@router.put("/", response_model=UserRead)
+@router.put("/", dependencies=[Depends(get_current_user)], response_model=UserRead)
 def update_user_data(
   new_user: UserUpdate, 
   email: Annotated[str, Query(..., description="Email de user a update")], 
@@ -92,7 +94,7 @@ def update_user_data(
 
 
 ## operations delete un user a partir de son id
-@router.delete("/{user_id}", response_model=dict[str, str])
+@router.delete("/{user_id}", dependencies=[Depends(isAdmin)], response_model=dict[str, str])
 def delete_user_by_id(
   user_id: int = Path(..., description="ID de user a supprimer"), 
   db: Session = Depends(get_db)
