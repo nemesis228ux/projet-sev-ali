@@ -107,6 +107,32 @@ def get_user_cartes(bd_session : Session, user_id : int, type_carte : Optional[C
 
     return cartes
 
+def get_user_cartes_in_an_account(bd_session : Session, user_id : int, account_id : int, type_carte : Optional[CarteTypes]=None) -> Sequence[Carte]:
+    """
+    Fonction pour obtenir toutes les cartes d'un compte précis
+
+    Args:
+        bd_session: Instance de la bd
+        user_id: Id de l'user
+        account_id: Id du compte
+        type_carte: Parametre optionnel pour filtrer les resultats par rapport aux types de carte, si non passé la func
+            renvoi toutes les cartes de l'user
+
+    Returns:
+        Sequence[Carte] : La liste des cartes recherchées
+    """
+    account = get_account_by_id(bd_session, user_id, account_id)
+
+    if not account:     # Si la carte n'est pas found on retourne une liste empty
+        return []
+
+    cartes = account.cartes
+    if type_carte:      # On filtre si on doit filtrer
+        cartes = [carte for carte in cartes if carte.type_carte is type_carte]
+    return cartes
+
+
+
 def get_user_specific_carte(bd_session : Session, user_id : int, carte_id : int, carte_password : str) -> Optional[Carte]:
     """
     Fonction pour récuperer une carte spécifique d'un utilisateur
