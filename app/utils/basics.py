@@ -1,7 +1,8 @@
 from datetime import datetime
 
+
 # Fonction du robot
-def format_datetime_custom(time : datetime):
+def format_datetime_custom(time: datetime):
     """
     Fonction personnalisée pour avoir un formattage de datetime en français By Claude
 
@@ -15,9 +16,29 @@ def format_datetime_custom(time : datetime):
         return ""
     try:
         # Dictionnaires pour la traduction française
-        jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-        mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-                'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+        jours = [
+            "lundi",
+            "mardi",
+            "mercredi",
+            "jeudi",
+            "vendredi",
+            "samedi",
+            "dimanche",
+        ]
+        mois = [
+            "janvier",
+            "février",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juillet",
+            "août",
+            "septembre",
+            "octobre",
+            "novembre",
+            "décembre",
+        ]
 
         # Extraire les composants de la date
         jour_semaine = jours[time.weekday()]  # weekday() commence à 0 = lundi

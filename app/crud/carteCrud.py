@@ -1,18 +1,23 @@
+from datetime import datetime, timedelta
+from typing import Optional, Sequence, List
+
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.crud.compteCrud import get_account_by_id, get_user_accounts
 from app.models.carte import Carte, CarteTypes
-from typing import Optional, Sequence, List
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-
 from app.utils.generator import generate_random_number
 from app.utils.security import hash_password, verify_password
-from datetime import datetime, timedelta
 from . import CRUDResponse
 
+
 def create_new_carte(
-    bd_session : Session, user_id : int, account_id : int, type_carte : CarteTypes, password : str
+    bd_session: Session,
+    user_id: int,
+    account_id: int,
+    type_carte: CarteTypes,
+    password: str,
 ) -> CRUDResponse[Optional[Carte]]:
     """
     Fonction pour créer une new carte sur un compte d'un user
@@ -29,33 +34,40 @@ def create_new_carte(
 
     """
 
-    result = get_account_by_id(bd_session, user_id, account_id)    # On essaye de récup le compte
+    result = get_account_by_id(
+        bd_session, user_id, account_id
+    )  # On essaye de récup le compte
 
-    if result.is_error():     # Compte inexistant
-        return CRUDResponse.crud_error("Le compte spécifié n'existe pas, impossible d'y ajouter une carte")
+    if result.is_error():  # Compte inexistant
+        return CRUDResponse.crud_error(
+            "Le compte spécifié n'existe pas, impossible d'y ajouter une carte"
+        )
 
     account = result.data
 
     new_carte = Carte(
-        hashed_code_secu=hash_password(password),       # mdp hashé dans la bd
+        hashed_code_secu=hash_password(password),  # mdp hashé dans la bd
         type_carte=type_carte,
-        date_expiration=datetime.now() + timedelta(days=365 * 5),       # Validité de 5 ans par défaut
-        id_compte=account.id_compte
+        date_expiration=datetime.now()
+        + timedelta(days=365 * 5),  # Validité de 5 ans par défaut
+        id_compte=account.id_compte,
     )
 
     while True:
         try:
-            new_carte.numero_carte = generate_random_number(size=16)     # On génère un numéro aléatoire et unique
+            new_carte.numero_carte = generate_random_number(
+                size=16
+            )  # On génère un numéro aléatoire et unique
             bd_session.add(new_carte)
             bd_session.commit()
             break
 
-        except IntegrityError:      # Cas ou le numéro de carte existe déja
-            bd_session.rollback()   # On reset tout et on essaye un autre numéro
+        except IntegrityError:  # Cas ou le numéro de carte existe déja
+            bd_session.rollback()  # On reset tout et on essaye un autre numéro
             continue
 
         except Exception as e:
-            exc = f'Exception {e.__class__.__name__} : {e}'
+            exc = f"Exception {e.__class__.__name__} : {e}"
             print(exc)
             return CRUDResponse.crud_error(exc)
 
@@ -63,7 +75,10 @@ def create_new_carte(
 
     return CRUDResponse.crud_success(new_carte)
 
-def get_all_cartes(bd_session : Session, type_carte : Optional[CarteTypes]=None) -> CRUDResponse[Sequence[Carte]]:
+
+def get_all_cartes(
+    bd_session: Session, type_carte: Optional[CarteTypes] = None
+) -> CRUDResponse[Sequence[Carte]]:
     """
     Fonction pour obtenir toutes les cartes de la bd, avec possibilité de filtrage
 
@@ -76,13 +91,16 @@ def get_all_cartes(bd_session : Session, type_carte : Optional[CarteTypes]=None)
     """
 
     query = select(Carte)
-    if type_carte:      # On filtre si on doit filtrer
+    if type_carte:  # On filtre si on doit filtrer
         # noinspection PyTypeChecker
         query = query.where(Carte.type_carte == type_carte)
 
     return CRUDResponse.crud_success(bd_session.scalars(query).all())
 
-def get_user_cartes(bd_session : Session, user_id : int, type_carte : Optional[CarteTypes]=None) -> CRUDResponse[List[Carte]]:
+
+def get_user_cartes(
+    bd_session: Session, user_id: int, type_carte: Optional[CarteTypes] = None
+) -> CRUDResponse[List[Carte]]:
     """
     Fonction pour récuperer les cartes d'un utilisateur, avec possibilité de filtrage
     Args:
@@ -95,24 +113,32 @@ def get_user_cartes(bd_session : Session, user_id : int, type_carte : Optional[C
         List[Carte] : La liste des cartes recherchées
     """
 
-    #TODO: Chercher une autre approche plus rapide apreès, passer directement par requete sql
+    # TODO: Chercher une autre approche plus rapide apreès, passer directement par requete sql
     cartes: List[Carte] = []
-    result = get_user_accounts(bd_session, user_id)       # On récupère tous les comptes de l'user
+    result = get_user_accounts(
+        bd_session, user_id
+    )  # On récupère tous les comptes de l'user
 
     accounts = result.data
 
     # On itère sur les comptes pour récuperer les cartes
     for account in accounts:
         account_cartes = account.cartes
-        if account_cartes:      # On ajoute les cartes si présentes
+        if account_cartes:  # On ajoute les cartes si présentes
             cartes.extend(account_cartes)
 
-    if type_carte:      # On filtre si on doit filtrer
+    if type_carte:  # On filtre si on doit filtrer
         cartes = [carte for carte in cartes if carte.type_carte is type_carte]
 
     return CRUDResponse.crud_success(cartes)
 
-def get_user_cartes_in_an_account(bd_session : Session, user_id : int, account_id : int, type_carte : Optional[CarteTypes]=None) -> CRUDResponse[Sequence[Carte]]:
+
+def get_user_cartes_in_an_account(
+    bd_session: Session,
+    user_id: int,
+    account_id: int,
+    type_carte: Optional[CarteTypes] = None,
+) -> CRUDResponse[Sequence[Carte]]:
     """
     Fonction pour obtenir toutes les cartes d'un compte précis
 
@@ -133,19 +159,20 @@ def get_user_cartes_in_an_account(bd_session : Session, user_id : int, account_i
 
     account = result.data
 
-    if not account:     # Si la carte n'est pas found on retourne une liste empty
+    if not account:  # Si la carte n'est pas found on retourne une liste empty
         return CRUDResponse.crud_success([])
 
     cartes = account.cartes
 
-    if type_carte:      # On filtre si on doit filtrer
+    if type_carte:  # On filtre si on doit filtrer
         cartes = [carte for carte in cartes if carte.type_carte is type_carte]
 
     return CRUDResponse.crud_success(cartes)
 
 
-
-def get_user_specific_carte(bd_session : Session, user_id : int, carte_id : int, carte_password : str) -> CRUDResponse[Optional[Carte]]:
+def get_user_specific_carte(
+    bd_session: Session, user_id: int, carte_id: int, carte_password: str
+) -> CRUDResponse[Optional[Carte]]:
     """
     Fonction pour récuperer une carte spécifique d'un utilisateur
     Args:
@@ -159,23 +186,29 @@ def get_user_specific_carte(bd_session : Session, user_id : int, carte_id : int,
     """
 
     # noinspection PyTypeChecker
-    query = select(Carte).where(Carte.id_carte == carte_id)     # Requete
+    query = select(Carte).where(Carte.id_carte == carte_id)  # Requete
 
-    carte : Carte | None = bd_session.scalar(query)             #Execution de la requete
+    carte: Carte | None = bd_session.scalar(query)  # Execution de la requete
 
     if not carte:
-        return CRUDResponse.crud_error("Cette carte n'existe pas")     # Carte non trouvé
+        return CRUDResponse.crud_error("Cette carte n'existe pas")  # Carte non trouvé
 
-    if not verify_password(carte_password, carte.hashed_code_secu):     # On vérifie le mdp donné par l'user
+    if not verify_password(
+        carte_password, carte.hashed_code_secu
+    ):  # On vérifie le mdp donné par l'user
         return CRUDResponse.crud_error("Mot de passe de la carte incorrect")
 
-    if carte.base_account.account_owner_id != user_id:          # On vérifie si la carte appartient bien à l'user
+    if (
+        carte.base_account.account_owner_id != user_id
+    ):  # On vérifie si la carte appartient bien à l'user
         return CRUDResponse.crud_error("Cette carte ne vous appartient pas")
-
 
     return CRUDResponse.crud_success(carte)
 
-def delete_user_carte(bd_session :Session, user_id : int, carte_id : int, carte_password : str) -> CRUDResponse[bool]:
+
+def delete_user_carte(
+    bd_session: Session, user_id: int, carte_id: int, carte_password: str
+) -> CRUDResponse[bool]:
     """
     Fonction pour supprimer une carte spécifique d'un utilisateur
     Args:
@@ -189,30 +222,40 @@ def delete_user_carte(bd_session :Session, user_id : int, carte_id : int, carte_
     """
     # noinspection PyTypeChecker
 
-    query = select(Carte).where(Carte.id_carte == carte_id)         # Requete
+    query = select(Carte).where(Carte.id_carte == carte_id)  # Requete
 
-    carte: Carte | None = bd_session.scalar(query)                  # Execution de la requete
+    carte: Carte | None = bd_session.scalar(query)  # Execution de la requete
 
     if not carte:
         return CRUDResponse.crud_error("Cette carte n'existe pas")  # Carte non trouvé
 
-    if not verify_password(carte_password, carte.hashed_code_secu):  # On vérifie le mdp donné par l'user
+    if not verify_password(
+        carte_password, carte.hashed_code_secu
+    ):  # On vérifie le mdp donné par l'user
         return CRUDResponse.crud_error("Mot de passe de la carte incorrect")
 
-    if carte.base_account.account_owner_id != user_id:  # On vérifie si la carte appartient bien à l'user
+    if (
+        carte.base_account.account_owner_id != user_id
+    ):  # On vérifie si la carte appartient bien à l'user
         return CRUDResponse.crud_error("Cette carte ne vous appartient pas")
 
     try:
-        bd_session.delete(carte)        # Suppression effective de la carte
+        bd_session.delete(carte)  # Suppression effective de la carte
         bd_session.commit()
         return CRUDResponse.crud_success(True)
     except Exception as e:
-        exc = f'Exception {e.__class__.__name__} : {e}'
+        exc = f"Exception {e.__class__.__name__} : {e}"
         print(exc)
         return CRUDResponse.crud_error(exc)
 
 
-def change_carte_password(bd_session :Session, user_id : int, carte_id : int, old_password : str, new_password : str) -> CRUDResponse[bool]:
+def change_carte_password(
+    bd_session: Session,
+    user_id: int,
+    carte_id: int,
+    old_password: str,
+    new_password: str,
+) -> CRUDResponse[bool]:
     """
     Fonction pour changer le mot de passe d'une carte spécifique d'un utilisateur
     Args:
@@ -227,25 +270,30 @@ def change_carte_password(bd_session :Session, user_id : int, carte_id : int, ol
     """
 
     # noinspection PyTypeChecker
-    query = select(Carte).where(Carte.id_carte == carte_id)         # Requete
+    query = select(Carte).where(Carte.id_carte == carte_id)  # Requete
 
-    carte: Carte | None = bd_session.scalar(query)                  # Execution de la requete
+    carte: Carte | None = bd_session.scalar(query)  # Execution de la requete
 
     if not carte:
         return CRUDResponse.crud_error("Cette carte n'existe pas")  # Carte non trouvé
 
-    if not verify_password(old_password, carte.hashed_code_secu):  # On vérifie le mdp donné par l'user
+    if not verify_password(
+        old_password, carte.hashed_code_secu
+    ):  # On vérifie le mdp donné par l'user
         return CRUDResponse.crud_error("Mot de passe de la carte incorrect")
 
-    if carte.base_account.account_owner_id != user_id:  # On vérifie si la carte appartient bien à l'user
+    if (
+        carte.base_account.account_owner_id != user_id
+    ):  # On vérifie si la carte appartient bien à l'user
         return CRUDResponse.crud_error("Cette carte ne vous appartient pas")
 
-    carte.hashed_code_secu = hash_password(new_password)        # Mise à jour du mdp de la carte
+    carte.hashed_code_secu = hash_password(
+        new_password
+    )  # Mise à jour du mdp de la carte
     try:
-        bd_session.commit()                             # Commit des changements
+        bd_session.commit()  # Commit des changements
         return CRUDResponse.crud_success(True)
     except Exception as e:
-        exc = f'Exception {e.__class__.__name__} : {e}'
+        exc = f"Exception {e.__class__.__name__} : {e}"
         print(exc)
         return CRUDResponse.crud_error(exc)
-
