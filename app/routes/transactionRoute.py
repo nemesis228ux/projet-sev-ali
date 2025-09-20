@@ -20,8 +20,12 @@ def get_all_transactions(
         bd_session : Session = Depends(get_db)
 ) -> TransactionsView:
     """Route pour obtenir toutes les transactions de la bd"""
-    transacs = get_all_transactions_in_bd(bd_session, transac_type)
-    return TransactionsView.success_response(transacs)
+    result = get_all_transactions_in_bd(bd_session, transac_type)
+
+    if result.is_success():
+        return TransactionsView.success_response(result.data)
+
+    return TransactionsView.error_response(result.error)
 
 @router.get("/", response_model=TransactionsView)
 def get_user_all_transactions(
@@ -31,8 +35,11 @@ def get_user_all_transactions(
     bd_session : Session = Depends(get_db)
 ) -> TransactionsView:
     """Route pour obtenir toutes les transactions d'un user"""
-    transacs = get_user_transactions(bd_session, user_id, body.account_id, transac_type)
-    return TransactionsView.success_response(transacs)
+    result = get_user_transactions(bd_session, user_id, body.account_id, transac_type)
+    if result.is_success():
+        return TransactionsView.success_response(result.data)
+
+    return TransactionsView.error_response(result.error)
 
 @router.post("/transfert", response_model=TransactionView)
 def do_a_transfert(
@@ -111,6 +118,9 @@ def see_a_transaction(
 ) -> TransactionView:
     """Route pour avoir une transac specifique"""
 
-    transac = get_user_specific_transaction(bd_session, user_id, account_id, transac_id)
+    result = get_user_specific_transaction(bd_session, user_id, account_id, transac_id)
 
-    return TransactionView.success_response(transac)
+    if result.is_success():
+        return TransactionView.success_response(result.data)
+
+    return TransactionView.error_response(result.error)

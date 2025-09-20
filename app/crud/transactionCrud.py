@@ -4,12 +4,12 @@ from sqlalchemy import select
 from app.models.transaction import Transaction, TransactionTypes
 from app.schemas.transactionSchema import TransactionResult
 from app.crud.compteCrud import get_account_by_id, get_account_by_numero_compte
-#TODO : Voir si on peut ajouter des message d'erreur clair
+from app.crud import CRUDResponse
 
 def get_all_transactions_in_bd(
     bd_session : Session,
     transaction_type : Optional[TransactionTypes] = None
-) -> Sequence[Transaction]:
+) -> CRUDResponse[Sequence[Transaction]]:
     """
     Fonction poour recupérer les transactions de la bd avec possibilité de filtrage
 
@@ -27,13 +27,13 @@ def get_all_transactions_in_bd(
         query = query.where(Transaction.type_transac == transaction_type)
 
     transacs = bd_session.scalars(query).all()
-    return transacs
+    return CRUDResponse.crud_success(transacs)
 
 def get_user_transactions(
         bd_session : Session,
         user_id : int,
         account_id : int,
-        transaction_type : TransactionTypes = TransactionTypes.TRANSFERT) -> Sequence[Transaction]:
+        transaction_type : TransactionTypes = TransactionTypes.TRANSFERT) -> CRUDResponse[Sequence[Transaction]]:
     """
     Fonction poour recupérer les transactions d'un compte avec possibilité de filtrage
 
@@ -47,9 +47,11 @@ def get_user_transactions(
         type: La liste des transactions voulues
     """
 
-    user_account = get_account_by_id(bd_session, user_id, account_id)   # On recupere le compte cible
-    if not user_account:    #Si le compte n'est pas trouvé, on retourne un tableau vide
-        return []       #TODO: Voir si c'est possible de rajouter un message clair
+    result = get_account_by_id(bd_session, user_id, account_id)   # On recupere le compte cible
+    if result.is_error():    #Si le compte n'est pas trouvé, on retourne un tableau vide
+        return CRUDResponse.crud_error(result.error)
+
+    user_account = result.data
 
     transactions = user_account.transactions
     if not transaction_type:
@@ -69,14 +71,14 @@ def get_user_transactions(
         case TransactionTypes.RETRAIT:
             transactions = [transac for transac in transactions if transac.type_transac == TransactionTypes.RETRAIT]
 
-    return transactions
+    return CRUDResponse.crud_success(transactions)
 
 def get_user_specific_transaction(
         bd_session : Session,
         user_id : int,
         account_id : int,
         transaction_id : int
-) -> Optional[Transaction]:
+) -> CRUDResponse[Optional[Transaction]]:
     """
     Fonction pour obtenir une transaction spécifique
     Args:
@@ -92,16 +94,16 @@ def get_user_specific_transaction(
     query = select(Transaction).where(Transaction.id_transac == transaction_id)
     transac = bd_session.scalar(query)      # On recuperere la transac
     if not transac:     # La teansaction n'existe pas
-        return None
+        return CRUDResponse.crud_error("Cette transaction n'existe pas")
 
     # On vérifie si l'utilisateur est bien impliqué dans la transaction
     if transac.base_account.account_owner_id == user_id \
             or \
-            get_account_by_id(bd_session, user_id, account_id).numero_compte == transac.dest_num_compte:
-        return transac
+            get_account_by_id(bd_session, user_id, account_id).data.numero_compte == transac.dest_num_compte:
+        return CRUDResponse.crud_success(transac)
 
     #Cas où l'user n'est pas impliqué dans la transac
-    return None
+    return CRUDResponse.crud_error("Désolé vous n'ètes pas impliqué dans cette transaction")
 
 class Transactor:
     """Classe utilitaire pour gérer les transactions easily"""
@@ -132,16 +134,20 @@ class Transactor:
             type: Un tuple avec le resultat et un message d'erreur au cas où l'op a échioué
         """
         try:
-            account = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
-            if not account:
-                return False, "Ce compte n'existe pas ou ne vous appartient pas"
-            solde = account.solde
+            result = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
+            if result.is_error():
+                return False, result.error
+
+            account = result.data
+            solde = account.data.solde
+
             if self.__transaction_amount > solde:
                 return False, "Solde insuffisant pour le retrait"
             new_solde = solde - self.__transaction_amount
             account.solde = new_solde
             self.__bd_session.commit()      # On met tout à jour
             return True, None
+
         except Exception as e:
             exc = f'Exception {e.__class__.__name__} : {e}'     # La trace de l'éxception
             return False, exc
@@ -153,9 +159,11 @@ class Transactor:
             type: Un tuple avec le resultat et un message d'erreur au cas où l'op a échioué
         """
         try:
-            compte = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
-            if not compte:
-                return False, "Ce compte n'existe pas ou ne vous appartient pas"
+            result = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
+            if result.is_error():
+                return False, result.error
+
+            compte = result.data
             current_solde = compte.solde
             compte.solde = current_solde + self.__transaction_amount
             self.__bd_session.commit()      # On met tout a jour
@@ -172,21 +180,24 @@ class Transactor:
         """
         try:
             # On recupere le compte du sender
-            sender_account = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
+            sender_account_result = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
 
-            if not sender_account:      # Cas où le compte est inexistantt
-                return False, "Le compte spécifié n'esxiste pas"
+            if sender_account_result.is_error():      # Cas où le compte est inexistantt
+                return False, sender_account_result.error
+
+            sender_account = sender_account_result.data
 
             sender_solde = sender_account.solde
             if sender_solde < self.__transaction_amount:
                 return False, "Vous n'avez pas suffisament de fonds"
 
             # On recupere le compte du receiver
-            receiver_account = get_account_by_numero_compte(self.__bd_session, self.__destinator_num_compte)
+            receiver_account_result = get_account_by_numero_compte(self.__bd_session, self.__destinator_num_compte)
 
-            if not receiver_account:      # Cas où le compte est inexistantt
+            if receiver_account_result.is_error():      # Cas où le compte est inexistantt
                 return False, "Le numéro de compte n'est pas valide"
 
+            receiver_account = receiver_account_result.data
 
             # Transaction des fonds
             sender_account.solde = sender_solde - self.__transaction_amount
