@@ -4,45 +4,47 @@ from app.schemas.compteSchema import AccountCreate
 from typing import Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from uuid import uuid4
+from app.utils.generator import generate_random_number
+from app.crud import CRUDResponse
 
-def create_new_account(bd_session : Session, new_account_base : AccountCreate) -> Optional[Compte]:
+def create_new_account(bd_session : Session, new_account_base : AccountCreate, user_id : int) -> CRUDResponse[Optional[Compte]]:
     """
     Fonctionn pour ajjouter un utilisateur à la base de données
 
     Args:
         bd_session: Instance de la bd
         new_account_base: Informations de bases sur le nouveau compte à créer
+        user_id: Id de l'user
 
     Returns:
         type: Le compte crée si l'opération a reussi
     """
 
     new_account = Compte(
-        account_owner_id=new_account_base.user_id,
+        account_owner_id=user_id,
         solde=new_account_base.initial_amount,
         type_compte=new_account_base.account_type
     )
 
     while True:
         try:
-            random_num_compte = uuid4().int.__str__()[:16]      # Pour générer un numéro de compte aléatoire
+            random_num_compte = generate_random_number(size=16)      # Pour générer un numéro de compte aléatoire
             new_account.numero_compte = random_num_compte
             bd_session.add(new_account)
             bd_session.commit()
             bd_session.refresh(new_account)
-            return new_account
+            return CRUDResponse.crud_success(new_account)
 
         except IntegrityError:      # Cas ou le numéro de compte est déja présent
-            bd_session.rollback()
-            new_account.numero_compte = uuid4().int.__str__()[:16]
+            bd_session.rollback()      # Reset des dernières modifications
             continue
 
         except Exception as e:
-            print(f'Exception {e.__class__.__name__} : {e}')
-            break
+            exc = f'Exception {e.__class__.__name__} : {e}'
+            print(exc)
+            return CRUDResponse.crud_error(exc)
 
-def delete_user_account(bd_session : Session, user_id : int, account_id : int) -> bool:
+def delete_user_account(bd_session : Session, user_id : int, account_id : int) -> CRUDResponse[Optional[Compte]]:
     """
     Fonction pour supprimer un compte de la base de donnée
 
@@ -56,17 +58,24 @@ def delete_user_account(bd_session : Session, user_id : int, account_id : int) -
     """
     try:
         account = get_account_by_id(bd_session, user_id, account_id)  # On recupère le compte à supprimer
-        if not account:
-            return False
+        if account.is_error():
+            return CRUDResponse.crud_error(account.error)
 
-        bd_session.delete(account)
+        # On doit aussi supprimer les cartes liés au compte
+        cartes = account.data.cartes
+        for carte in cartes:
+            bd_session.delete(carte)
+
+        bd_session.delete(account.data)
         bd_session.commit()
-        return True
+        return CRUDResponse.crud_success(account)
     except Exception as e:
-        print(f'Exception {e.__class__.__name__} : {e}')
-        return False
+        exc = f'Exception {e.__class__.__name__} : {e}'
+        print(exc)
+        return CRUDResponse.crud_error(exc)
 
-def get_all_accounts(bd_session: Session, account_type : Optional[AccountTypes] = None) -> Sequence[Compte]:
+
+def get_accounts(bd_session: Session, account_type : Optional[AccountTypes] = None) -> CRUDResponse[Sequence[Compte]]:
     """
     Fonction pour recuperer tous les comptes de la bd, avec possibilité de filtrage par type de compte
 
@@ -85,13 +94,13 @@ def get_all_accounts(bd_session: Session, account_type : Optional[AccountTypes] 
             Compte.type_compte == account_type
         )
 
-    return bd_session.scalars(query).all()
+    return CRUDResponse.crud_success(bd_session.scalars(query).all())
 
 def get_user_accounts(
         bd_session : Session,
         user_id : int,
         account_type : Optional[AccountTypes] = None
-) -> Optional[Sequence[Compte]]:
+) -> CRUDResponse[Optional[Sequence[Compte]]]:
     """
     Fonction pour recuperer tous les comptes d'un utilisateur spécifique, avec possibilité de filtrage par type de compte
 
@@ -114,9 +123,9 @@ def get_user_accounts(
             Compte.type_compte == account_type
         )
 
-    return bd_session.scalars(query).all()
+    return CRUDResponse.crud_success(bd_session.scalars(query).all())
 
-def get_account_by_id(bd_session : Session, user_id : int, account_id : int) -> Optional[Compte]:
+def get_account_by_id(bd_session : Session, user_id : int, account_id : int) -> CRUDResponse[Optional[Compte]]:
     """
     Fonction pour recuperer un compte spécique d'un utilisateur par son user_id
 
@@ -131,12 +140,19 @@ def get_account_by_id(bd_session : Session, user_id : int, account_id : int) -> 
 
     # noinspection PyTypeChecker,PydanticTypeChecker
     query = select(Compte).where(
-        Compte.account_owner_id == user_id,
         Compte.id_compte == account_id
     )
-    return bd_session.scalars(query).first()
 
-def get_account_by_numero_compte(bd_session : Session, num_compte : str) -> Optional[Compte]:
+    account : Compte= bd_session.scalar(query)
+    if not account:
+        return CRUDResponse.crud_error("Ce compte n'existe pas")
+    if account.account_owner_id != user_id:
+        return CRUDResponse.crud_error("Ce compte ne vous appartient pas")
+
+    return CRUDResponse.crud_success(account)
+
+
+def get_account_by_numero_compte(bd_session : Session, num_compte : str) -> CRUDResponse[Optional[Compte]]:
     """
     Fonction pour recuperer un compte spécique d'un utilisateur par son numero de compte
 
@@ -152,4 +168,10 @@ def get_account_by_numero_compte(bd_session : Session, num_compte : str) -> Opti
     query = select(Compte).where(
         Compte.numero_compte == num_compte,
     )
-    return bd_session.scalars(query).first()
+
+    account = bd_session.scalar(query)
+
+    if not account:
+        return CRUDResponse.crud_error("Ce compte n'existe pas")
+
+    return CRUDResponse.crud_success(account)

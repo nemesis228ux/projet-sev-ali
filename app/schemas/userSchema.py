@@ -2,14 +2,15 @@
 from pydantic import BaseModel, EmailStr, PastDate
 from app.models.user import UserRole
 from typing import Optional
+from datetime import date
+
 
 
 class UserBase(BaseModel):
-  
   nom_user: str
   email: EmailStr
   adresse: str
-  date_naissance: str
+  date_naissance: PastDate
   role: UserRole = UserRole.client
   id_banque: int
 
@@ -19,8 +20,6 @@ class UserCreate(UserBase):
   """Model pydantic pr valider le creation d'un user"""
   
   password: str
-
-
 
 class UserLogin(BaseModel):
   """Modele pydantic pour valider les données au moment
@@ -33,8 +32,6 @@ class UserLogin(BaseModel):
   nom_user: str
   email: EmailStr
   password: str
-
-
 
 class UserUpdate(BaseModel):
   """Ceci est un model pydantic pr mettre a jour les infos d'un user
@@ -50,9 +47,6 @@ class UserUpdate(BaseModel):
   role: Optional[UserRole] = None
   id_banque: Optional[int] = None
 
-
-
-
 class UserRead(BaseModel):
   """Model pydantic pour valider la sortie des données pour ue
   requette GET par exemple
@@ -65,7 +59,7 @@ class UserRead(BaseModel):
   nom_user: str
   email: EmailStr
   adresse: str
-  date_naissance: PastDate 
+  date_naissance: date 
   role: UserRole = UserRole.client
   id_banque: int
   

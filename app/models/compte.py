@@ -6,8 +6,7 @@ from enum import Enum
 
 from sqlalchemy.orm import relationship
 
-from app.models.transaction import Transaction
-from app.models.carte import Carte
+from datetime import datetime
 
 
 class AccountTypes(str, Enum):
@@ -37,7 +36,7 @@ class Compte(Base):
         index=True
     )
 
-    type_compte: str = Column(
+    type_compte: AccountTypes = Column(
         SqlEnum(AccountTypes),
         default=AccountTypes.COURANT,
         nullable=False
@@ -49,7 +48,7 @@ class Compte(Base):
         index=True
     )
 
-    date_ouverture: str = Column(
+    date_ouverture: datetime = Column(
         DateTime,
         default=func.now()
     )
@@ -71,8 +70,7 @@ class Compte(Base):
         back_populates="base_account"
     )
 
-    carte = relationship(
+    cartes = relationship(
         "Carte",
         back_populates="base_account",
-        uselist=False
     )
