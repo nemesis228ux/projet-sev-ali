@@ -1,12 +1,13 @@
 from fastapi import FastAPI
+
+from app.models import add_all_tables
 from app.routes import authRoute
 from app.routes import banqueRoute
 from app.routes import userRoute
+from app.routes.carteRoute import router as carte_routes
 from app.routes.compteRoute import router as compte_routes
 from app.routes.transactionRoute import router as transaction_routes
-from app.routes.carteRoute import router as carte_routes
 
-from app.models import add_all_tables
 add_all_tables()
 
 app = FastAPI()
@@ -24,8 +25,7 @@ app.include_router(transaction_routes)
 app.include_router(carte_routes)
 
 
-
-"""route a la racine : root"""
 @app.get("/")
 def root():
-  return {"message": "Bienvenu Boss"}
+    """Route à la racine : root"""
+    return {"message": "Bienvenu Boss"}

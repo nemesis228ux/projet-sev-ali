@@ -1,4 +1,3 @@
-
 def add_all_tables():
     """Fonction unique pour ajouter tt les tables"""
     from .banque import Banque

@@ -1,14 +1,16 @@
-from sqlalchemy.orm import Session
 from typing import Sequence, Optional
+
 from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.crud import CRUDResponse
+from app.crud.compteCrud import get_account_by_id, get_account_by_numero_compte
 from app.models.transaction import Transaction, TransactionTypes
 from app.schemas.transactionSchema import TransactionResult
-from app.crud.compteCrud import get_account_by_id, get_account_by_numero_compte
-from app.crud import CRUDResponse
+
 
 def get_all_transactions_in_bd(
-    bd_session : Session,
-    transaction_type : Optional[TransactionTypes] = None
+    bd_session: Session, transaction_type: Optional[TransactionTypes] = None
 ) -> CRUDResponse[Sequence[Transaction]]:
     """
     Fonction poour recupérer les transactions de la bd avec possibilité de filtrage
@@ -29,11 +31,13 @@ def get_all_transactions_in_bd(
     transacs = bd_session.scalars(query).all()
     return CRUDResponse.crud_success(transacs)
 
+
 def get_user_transactions(
-        bd_session : Session,
-        user_id : int,
-        account_id : int,
-        transaction_type : TransactionTypes = TransactionTypes.TRANSFERT) -> CRUDResponse[Sequence[Transaction]]:
+    bd_session: Session,
+    user_id: int,
+    account_id: int,
+    transaction_type: TransactionTypes = TransactionTypes.TRANSFERT,
+) -> CRUDResponse[Sequence[Transaction]]:
     """
     Fonction poour recupérer les transactions d'un compte avec possibilité de filtrage
 
@@ -47,8 +51,10 @@ def get_user_transactions(
         type: La liste des transactions voulues
     """
 
-    result = get_account_by_id(bd_session, user_id, account_id)   # On recupere le compte cible
-    if result.is_error():    #Si le compte n'est pas trouvé, on retourne un tableau vide
+    result = get_account_by_id(
+        bd_session, user_id, account_id
+    )  # On recupere le compte cible
+    if result.is_error():  # Si le compte n'est pas trouvé, on retourne un tableau vide
         return CRUDResponse.crud_error(result.error)
 
     user_account = result.data
@@ -56,28 +62,36 @@ def get_user_transactions(
     transactions = user_account.transactions
     if not transaction_type:
         transaction_type = TransactionTypes.TRANSFERT
-    match transaction_type.value:       # SELON sur le type de transaction
+    match transaction_type.value:  # SELON sur le type de transaction
         case TransactionTypes.TRANSFERT:
             # Si ce sont des transferts, on doit aussi recuperer les transferts entrants à travers le numero de compte
             account_num = user_account.numero_compte
             # noinspection PyTypeChecker,PydanticTypeChecker
-            query = select(Transaction).where(Transaction.dest_num_compte == account_num)
+            query = select(Transaction).where(
+                Transaction.dest_num_compte == account_num
+            )
             other_transacs = bd_session.scalars(query).all()
             transactions.extend(other_transacs)
 
         case TransactionTypes.DEPOT:
-            transactions = [transac for transac in transactions if transac.type_transac == TransactionTypes.DEPOT]
+            transactions = [
+                transac
+                for transac in transactions
+                if transac.type_transac == TransactionTypes.DEPOT
+            ]
 
         case TransactionTypes.RETRAIT:
-            transactions = [transac for transac in transactions if transac.type_transac == TransactionTypes.RETRAIT]
+            transactions = [
+                transac
+                for transac in transactions
+                if transac.type_transac == TransactionTypes.RETRAIT
+            ]
 
     return CRUDResponse.crud_success(transactions)
 
+
 def get_user_specific_transaction(
-        bd_session : Session,
-        user_id : int,
-        account_id : int,
-        transaction_id : int
+    bd_session: Session, user_id: int, account_id: int, transaction_id: int
 ) -> CRUDResponse[Optional[Transaction]]:
     """
     Fonction pour obtenir une transaction spécifique
@@ -92,23 +106,36 @@ def get_user_specific_transaction(
     """
     # noinspection PyTypeChecker,PydanticTypeChecker
     query = select(Transaction).where(Transaction.id_transac == transaction_id)
-    transac = bd_session.scalar(query)      # On recuperere la transac
-    if not transac:     # La teansaction n'existe pas
+    transac = bd_session.scalar(query)  # On recuperere la transac
+    if not transac:  # La teansaction n'existe pas
         return CRUDResponse.crud_error("Cette transaction n'existe pas")
 
     # On vérifie si l'utilisateur est bien impliqué dans la transaction
-    if transac.base_account.account_owner_id == user_id \
-            or \
-            get_account_by_id(bd_session, user_id, account_id).data.numero_compte == transac.dest_num_compte:
+    if (
+        transac.base_account.account_owner_id == user_id
+        or get_account_by_id(bd_session, user_id, account_id).data.numero_compte
+        == transac.dest_num_compte
+    ):
         return CRUDResponse.crud_success(transac)
 
-    #Cas où l'user n'est pas impliqué dans la transac
-    return CRUDResponse.crud_error("Désolé vous n'ètes pas impliqué dans cette transaction")
+    # Cas où l'user n'est pas impliqué dans la transac
+    return CRUDResponse.crud_error(
+        "Désolé vous n'ètes pas impliqué dans cette transaction"
+    )
+
 
 class Transactor:
     """Classe utilitaire pour gérer les transactions easily"""
-    def __init__(self, bd_session : Session, initiator_id : int, iniatior_account_id : int,
-                 transaction_type : TransactionTypes, transaction_amount : float, destinator_num_compte : Optional[str] = None):
+
+    def __init__(
+        self,
+        bd_session: Session,
+        initiator_id: int,
+        iniatior_account_id: int,
+        transaction_type: TransactionTypes,
+        transaction_amount: float,
+        destinator_num_compte: Optional[str] = None,
+    ):
         """
         Instanciateur de l'objet de transaction
         Args:
@@ -134,7 +161,9 @@ class Transactor:
             type: Un tuple avec le resultat et un message d'erreur au cas où l'op a échioué
         """
         try:
-            result = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
+            result = get_account_by_id(
+                self.__bd_session, self.__iniatior_id, self.__iniatior_account_id
+            )
             if result.is_error():
                 return False, result.error
 
@@ -145,11 +174,11 @@ class Transactor:
                 return False, "Solde insuffisant pour le retrait"
             new_solde = solde - self.__transaction_amount
             account.solde = new_solde
-            self.__bd_session.commit()      # On met tout à jour
+            self.__bd_session.commit()  # On met tout à jour
             return True, None
 
         except Exception as e:
-            exc = f'Exception {e.__class__.__name__} : {e}'     # La trace de l'éxception
+            exc = f"Exception {e.__class__.__name__} : {e}"  # La trace de l'éxception
             return False, exc
 
     def __deposit_transac(self) -> tuple[bool, str | None]:
@@ -159,17 +188,19 @@ class Transactor:
             type: Un tuple avec le resultat et un message d'erreur au cas où l'op a échioué
         """
         try:
-            result = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
+            result = get_account_by_id(
+                self.__bd_session, self.__iniatior_id, self.__iniatior_account_id
+            )
             if result.is_error():
                 return False, result.error
 
             compte = result.data
             current_solde = compte.solde
             compte.solde = current_solde + self.__transaction_amount
-            self.__bd_session.commit()      # On met tout a jour
+            self.__bd_session.commit()  # On met tout a jour
             return True, None
         except Exception as e:
-            exc = f'Exception {e.__class__.__name__} : {e}'         # La trace de l'éxception
+            exc = f"Exception {e.__class__.__name__} : {e}"  # La trace de l'éxception
             return False, exc
 
     def __transfer_transac(self) -> tuple[bool, str | None]:
@@ -180,9 +211,11 @@ class Transactor:
         """
         try:
             # On recupere le compte du sender
-            sender_account_result = get_account_by_id(self.__bd_session, self.__iniatior_id, self.__iniatior_account_id)
+            sender_account_result = get_account_by_id(
+                self.__bd_session, self.__iniatior_id, self.__iniatior_account_id
+            )
 
-            if sender_account_result.is_error():      # Cas où le compte est inexistantt
+            if sender_account_result.is_error():  # Cas où le compte est inexistantt
                 return False, sender_account_result.error
 
             sender_account = sender_account_result.data
@@ -192,9 +225,11 @@ class Transactor:
                 return False, "Vous n'avez pas suffisament de fonds"
 
             # On recupere le compte du receiver
-            receiver_account_result = get_account_by_numero_compte(self.__bd_session, self.__destinator_num_compte)
+            receiver_account_result = get_account_by_numero_compte(
+                self.__bd_session, self.__destinator_num_compte
+            )
 
-            if receiver_account_result.is_error():      # Cas où le compte est inexistantt
+            if receiver_account_result.is_error():  # Cas où le compte est inexistantt
                 return False, "Le numéro de compte n'est pas valide"
 
             receiver_account = receiver_account_result.data
@@ -203,13 +238,12 @@ class Transactor:
             sender_account.solde = sender_solde - self.__transaction_amount
             receiver_account.solde += self.__transaction_amount
 
-            self.__bd_session.commit()      # On met tout à jour
+            self.__bd_session.commit()  # On met tout à jour
 
             return True, None
 
-
         except Exception as e:
-            exc = f'Exception {e.__class__.__name__} : {e}'     # Cause de l'exception
+            exc = f"Exception {e.__class__.__name__} : {e}"  # Cause de l'exception
             return False, exc
 
     def launch_transaction(self) -> TransactionResult:
@@ -224,7 +258,7 @@ class Transactor:
         message = None
         transaction = None
 
-        match transac_type:     # SELON sur le type de transaction
+        match transac_type:  # SELON sur le type de transaction
             case TransactionTypes.DEPOT:
                 success, message = self.__deposit_transac()
             case TransactionTypes.RETRAIT:
@@ -232,15 +266,15 @@ class Transactor:
             case TransactionTypes.TRANSFERT:
                 success, message = self.__transfer_transac()
 
-        if success:     # On ajoute la transaction seulement en cas de succès
+        if success:  # On ajoute la transaction seulement en cas de succès
             transaction = Transaction(
                 initiator_account_id=self.__iniatior_account_id,
                 dest_num_compte=self.__destinator_num_compte,
                 type_transac=transac_type,
-                montant=self.__transaction_amount
+                montant=self.__transaction_amount,
             )
-            self.__bd_session.add(transaction)      # Ajout de la transac
-            self.__bd_session.commit()              # Mise à jour effective des data
+            self.__bd_session.add(transaction)  # Ajout de la transac
+            self.__bd_session.commit()  # Mise à jour effective des data
             self.__bd_session.refresh(transaction)
 
         return TransactionResult(success=success, error=message, transac=transaction)

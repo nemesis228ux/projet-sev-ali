@@ -1,57 +1,33 @@
-from app.core.database import Base
-from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey
+from datetime import datetime
 from enum import Enum
 
+from sqlalchemy import Column, Integer, String, Enum as SqlEnum, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+
+from app.core.database import Base
+
+
 class CarteTypes(str, Enum):
     VISA = "visa"
     MASTERCARD = "mastercard"
     AUTRE = "autre"
 
+
 class Carte(Base):
     """Modèles SQLAlchemy de la table `cartes_bancaires`"""
-    __tablename__ = 'cartes_bancaires'
 
-    id_carte : int = Column(
-        Integer,
-        primary_key=True,
-        index=True,
-        autoincrement=True
-    )
+    __tablename__ = "cartes_bancaires"
 
-    numero_carte : str = Column(
-        String(16),
-        index=True,
-        nullable=False,
-        unique=True
-    )
+    id_carte: int = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
-    hashed_code_secu : str = Column(
-        String(255),
-        index=True,
-        nullable=False
-    )
+    numero_carte: str = Column(String(16), index=True, nullable=False, unique=True)
 
-    type_carte : CarteTypes = Column(
-        SqlEnum(CarteTypes),
-        nullable=False
-    )
+    hashed_code_secu: str = Column(String(255), index=True, nullable=False)
 
-    date_expiration : datetime = Column(
-        DateTime,
-        nullable=False,
-        index=True
-    )
+    type_carte: CarteTypes = Column(SqlEnum(CarteTypes), nullable=False)
 
-    id_compte :  int = Column(
-        Integer,
-        ForeignKey("comptes.id_compte"),
-        index=True
-    )
+    date_expiration: datetime = Column(DateTime, nullable=False, index=True)
 
-    base_account = relationship(
-        "Compte",
-        back_populates='cartes',
-        uselist=False
-    )
+    id_compte: int = Column(Integer, ForeignKey("comptes.id_compte"), index=True)
+
+    base_account = relationship("Compte", back_populates="cartes", uselist=False)

@@ -1,25 +1,26 @@
 ## modeles pydantics pour banque
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class BanqueCreate(BaseModel):
-  
-  nom_banque: str
-  adresse: str
+
+    nom_banque: str
+    adresse: str
 
 
 class BanqueUpdate(BaseModel):
-  
-  nom_banque: Optional[str] = None
-  adresse: Optional[str] = None
+
+    nom_banque: Optional[str] = None
+    adresse: Optional[str] = None
 
 
 class BanqueRead(BaseModel):
-  
-  id_banque: int
-  nom_banque: str
-  adresse: str
-  
-  class Config:
-    orm_mode=True
+
+    id_banque: int
+    nom_banque: str
+    adresse: str
+
+    class Config:
+        orm_mode = True

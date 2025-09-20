@@ -2,35 +2,38 @@
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
 from app.crud.banqueCrud import create_banque, read_all_banKs
 from app.schemas.banqueSchema import BanqueRead, BanqueCreate
 from app.schemas.baseSchema import ApiBaseResponse
 
-
-router = APIRouter(prefix="/banques", tags=["banques"]) ## instance de notre router fastapi / petite instance de notre app ☺
+router = APIRouter(
+    prefix="/banques", tags=["banques"]
+)  ## instance de notre router fastapi / petite instance de notre app ☺
 
 
 # operation GET
 @router.get("/", response_model=ApiBaseResponse[list[BanqueRead]])
-def get_all_banques(db: Session = Depends(get_db)) -> ApiBaseResponse[list[BanqueRead]]: 
-  """route pour lire toutes les banques
+def get_all_banques(db: Session = Depends(get_db)) -> ApiBaseResponse[list[BanqueRead]]:
+    """route pour lire toutes les banques
 
-  Args:
-      db (Session, optional): prend une session de  db. Defaults to Depends(get_db).
+    Args:
+        db (Session, optional): prend une session de  db. Defaults to Depends(get_db).
 
-  Returns:
-      list[BanqueRead]: return liste de banque ou liste vide
-  """
+    Returns:
+        list[BanqueRead]: return liste de banque ou liste vide
+    """
 
-  all_banques = read_all_banKs(db=db)
-  return ApiBaseResponse.success_response(all_banques)
-
+    all_banques = read_all_banKs(db=db)
+    return ApiBaseResponse.success_response(all_banques)
 
 
 ## operation POST
 @router.post("/", response_model=ApiBaseResponse[BanqueRead])
-def create_a_banque(banque: BanqueCreate, db: Session = Depends(get_db)) -> ApiBaseResponse[BanqueRead]:
+def create_a_banque(
+    banque: BanqueCreate, db: Session = Depends(get_db)
+) -> ApiBaseResponse[BanqueRead]:
     """route pour creer une banque
 
     Args:
