@@ -1,21 +1,23 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-
-from app.core.config import DATABASE_PASSWORD
+from sqlalchemy.pool import NullPool
+from app.core.config import (DATABASE_PASSWORD, DATABASE_USER, DATABASE_HOST, DATABASE_NAME,DATABASE_PILOT,
+    DATABASE_TYPE, ENVIRONMENT)
 
 # databse url
-user="root"
-password= DATABASE_PASSWORD
-host="localhost"
-db_name="systeme_banque"
+other_args = ""
+pool_class = None
+if ENVIRONMENT == "PROD":
+    other_args = "?sslmode=require"
+    pool_class = NullPool
 
-DATABASE_URL =f"mysql+pymysql://{user}:{password}@{host}/{db_name}"
+DATABASE_URL =f"{DATABASE_TYPE}+{DATABASE_PILOT}://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}{other_args}"
 
 
 # configuration du engine
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=True, poolclass=pool_class)
 
-# creation de  Base: classe qui va servir a creer 
+# creation de  Base: classe qui va servir a creer
 # les model sqlalchemy et les tables
 Base = declarative_base()
 
@@ -31,8 +33,8 @@ def get_db():
     """ouvre la session avec db et attend la
     fin de toute operation engagées"""
     yield db
-    
+
   finally:
-    """Et finnalmy ferme la session 
+    """Et finnalmy ferme la session
     pr eviter fuite des données"""
     db.close()

@@ -8,3 +8,4 @@ bcrypt
 uvicorn[standard]
 python-jose[cryptography]
 python-multipart
+psycopg2-binary     # Interagir avec Supabase car PostgreeSQL
