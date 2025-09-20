@@ -22,7 +22,7 @@ def get_all_accounts(
 
     """Route pour recupérer tous les comptes de la bd"""
     acconts = get_accounts(bd_session, account_type)
-    return AccountsView.success_response(acconts)
+    return AccountsView.success_response(acconts.data)
 
 @router.post("/create", response_model=AccountView)
 def create_account(
@@ -32,8 +32,11 @@ def create_account(
 ) -> AccountView:
 
     """Route pour la création d'un nouveau compte"""
-    new_account = create_new_account(bd_session, body, user_id)
-    return AccountView.success_response(new_account)
+    result = create_new_account(bd_session, body, user_id)
+
+    if result.is_success():
+        return AccountView.success_response(result.data)
+    return AccountView.error_response(result.error)
 
 
 @router.get("/", response_model=AccountsView)
@@ -45,7 +48,7 @@ def get_user_all_accounts(
 
     """Route pour récuperer tous les comptes d'un user"""
     accounts = get_user_accounts(bd_session, user_id, account_type)
-    return AccountsView.success_response(accounts)
+    return AccountsView.success_response(accounts.data)
 
 
 @router.get("/{account_id}", response_model=AccountView)
@@ -56,16 +59,23 @@ def get_an_account(
 ) -> AccountView:
 
     """Route pour récuperer des infos sur un compte précis"""
-    account = get_account_by_id(bd_session, user_id, account_id)
-    return AccountView.success_response(account)
+    result = get_account_by_id(bd_session, user_id, account_id)
+
+    if result.is_success():
+        return AccountView.success_response(result.data)
+
+    return AccountView.error_response(result.error)
+
 
 @router.delete("/{account_id}", response_model=ActionResult)
 def delete_account(
     account_id : int = Path(title='Id du compte à supprimer'),
     user_id : int = Depends(get_current_user_id),
     bd_session : Session = Depends(get_db)
-) -> AccountView:
+) -> ActionResult:
 
     """Route pour supprimer un compte précis"""
-    delete_user_account(bd_session, user_id, account_id)
-    return ActionResult.success_response("Compte supprimé avec succès")
+    result = delete_user_account(bd_session, user_id, account_id)
+    if result.is_success():
+        return ActionResult.success_response("Compte supprimé avec succès")
+    return ActionResult.error_response(result.error)
