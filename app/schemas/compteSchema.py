@@ -6,7 +6,6 @@ from ..models.compte import AccountTypes
 from .baseSchema import ApiBaseResponse
 from datetime import datetime
 
-#TODO : Reajuster les modele plus tard en fonction du system d'authentification finale (Token ou user_id brut)
 
 # Modèle d'une requetes pour création de compte
 class AccountCreate(BaseModel):

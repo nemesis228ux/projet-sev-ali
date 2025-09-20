@@ -13,7 +13,6 @@ from app.crud.carteCrud import (get_all_cartes, create_new_carte, get_user_carte
     get_user_specific_carte, delete_user_carte, change_carte_password
 )
 
-# TODO: Essayer de mettre des messages d'erreurs clairs
 router = APIRouter(prefix='/cartes', tags=['cartes'])
 
 @router.get('/all', response_model=CartesView)

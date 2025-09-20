@@ -11,7 +11,6 @@ from app.utils.security import hash_password, verify_password
 from datetime import datetime, timedelta
 from . import CRUDResponse
 
-#TODO: Rajouter des essages d'erreurs clairs après
 def create_new_carte(
     bd_session : Session, user_id : int, account_id : int, type_carte : CarteTypes, password : str
 ) -> CRUDResponse[Optional[Carte]]:
