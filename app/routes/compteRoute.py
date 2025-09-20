@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user_id
 from app.crud.compteCrud import get_accounts, create_new_account, get_account_by_id, get_user_accounts, \
-    delete_user_account, get_account_by_numero_compte
+    delete_user_account
 from app.core.database import get_db
 from app.schemas.compteSchema import AccountsView, AccountCreate, AccountView, ActionResult
 from app.models.compte import AccountTypes
