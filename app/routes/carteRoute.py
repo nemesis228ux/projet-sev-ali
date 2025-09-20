@@ -25,7 +25,7 @@ def get_all_cartes_in_bd(
 
     cartes = get_all_cartes(bd_session, carte_type)
 
-    return CartesView.success_response(cartes)
+    return CartesView.success_response(cartes.data)
 
 @router.post('/create', response_model=CarteView)
 def create_a_new_carte(
@@ -35,9 +35,12 @@ def create_a_new_carte(
 ) -> CarteView:
     """Route pour créer une nouvelle carte"""
 
-    new_carte = create_new_carte(bd_session, user_id, body.account_id, body.carte_type, body.password)
+    result = create_new_carte(bd_session, user_id, body.account_id, body.carte_type, body.password)
 
-    return CarteView.success_response(new_carte)
+    if result.is_success():
+        return CarteView.success_response(result.data)
+
+    return CarteView.error_response(result.error)
 
 @router.get('/', response_model=CartesView)
 def get_user_all_cartes(
@@ -49,11 +52,16 @@ def get_user_all_cartes(
     """Route pour récuperer les cartes d'un user ou d'un compte"""
 
     if account_id:
-        cartes = get_user_cartes_in_an_account(bd_session, user_id, account_id, carte_type)
+        result = get_user_cartes_in_an_account(bd_session, user_id, account_id, carte_type)
     else:
-        cartes = get_user_cartes(bd_session, user_id, carte_type)
+        result = get_user_cartes(bd_session, user_id, carte_type)
 
-    return CartesView.success_response(cartes)
+    if result.is_success():
+        return CartesView.success_response(result.data)
+
+    return CartesView.error_response(result.error)
+
+
 
 @router.get('/{carte_id}', response_model=CarteView)
 def get_a_carte(
@@ -64,9 +72,12 @@ def get_a_carte(
 ) -> CarteView:
     """Route pour récuperer les infos sur une carte précise"""
 
-    carte = get_user_specific_carte(bd_session, user_id, carte_id, password)
+    result = get_user_specific_carte(bd_session, user_id, carte_id, password)
 
-    return CarteView.success_response(carte)
+    if result.is_success():
+        return CarteView.success_response(result.data)
+
+    return CarteView.error_response(result.error)
 
 @router.delete('/{carte_id}', response_model=ApiBaseResponse[bool])
 def delete_a_carte(
@@ -77,9 +88,9 @@ def delete_a_carte(
 ) -> ApiBaseResponse[bool]:
 
     result = delete_user_carte(bd_session, user_id, carte_id, password)
-    if result:
-        return ApiBaseResponse.success_response(result)
-    return ApiBaseResponse.error_response("Mot de passe incorrect")     # Je suppose
+    if result.is_success():
+        return ApiBaseResponse.success_response(result.data)
+    return ApiBaseResponse.error_response(result.error)
 
 
 @router.put('/change-password', response_model=ApiBaseResponse[bool])
@@ -92,7 +103,7 @@ def modify_carte_password(
 
     result = change_carte_password(bd_session, user_id, body.carte_id, body.old_password, body.new_password)
 
-    if result:
-        return ApiBaseResponse.success_response(result)
-    return ApiBaseResponse.error_response("Mot de passe incorrect")     # Je suppose toujours
+    if result.is_success():
+        return ApiBaseResponse.success_response(result.data)
 
+    return ApiBaseResponse.error_response(result.error)

@@ -9,11 +9,12 @@ from sqlalchemy.exc import IntegrityError
 from app.utils.generator import generate_random_number
 from app.utils.security import hash_password, verify_password
 from datetime import datetime, timedelta
+from . import CRUDResponse
 
 #TODO: Rajouter des essages d'erreurs clairs après
 def create_new_carte(
     bd_session : Session, user_id : int, account_id : int, type_carte : CarteTypes, password : str
-) -> Optional[Carte]:
+) -> CRUDResponse[Optional[Carte]]:
     """
     Fonction pour créer une new carte sur un compte d'un user
 
@@ -29,10 +30,12 @@ def create_new_carte(
 
     """
 
-    account = get_account_by_id(bd_session, user_id, account_id)    # On essaye de récup le compte
+    result = get_account_by_id(bd_session, user_id, account_id)    # On essaye de récup le compte
 
-    if not account:     # Compte inexistant
-        return None
+    if result.is_error():     # Compte inexistant
+        return CRUDResponse.crud_error("Le compte spécifié n'existe pas, impossible d'y ajouter une carte")
+
+    account = result.data
 
     new_carte = Carte(
         hashed_code_secu=hash_password(password),       # mdp hashé dans la bd
@@ -53,14 +56,15 @@ def create_new_carte(
             continue
 
         except Exception as e:
-            print(f'Exception {e.__class__.__name__} : {e}')
-            return None
+            exc = f'Exception {e.__class__.__name__} : {e}'
+            print(exc)
+            return CRUDResponse.crud_error(exc)
 
     bd_session.refresh(new_carte)
 
-    return new_carte
+    return CRUDResponse.crud_success(new_carte)
 
-def get_all_cartes(bd_session : Session, type_carte : Optional[CarteTypes]=None) -> Sequence[Carte]:
+def get_all_cartes(bd_session : Session, type_carte : Optional[CarteTypes]=None) -> CRUDResponse[Sequence[Carte]]:
     """
     Fonction pour obtenir toutes les cartes de la bd, avec possibilité de filtrage
 
@@ -77,9 +81,9 @@ def get_all_cartes(bd_session : Session, type_carte : Optional[CarteTypes]=None)
         # noinspection PyTypeChecker
         query = query.where(Carte.type_carte == type_carte)
 
-    return bd_session.scalars(query).all()
+    return CRUDResponse.crud_success(bd_session.scalars(query).all())
 
-def get_user_cartes(bd_session : Session, user_id : int, type_carte : Optional[CarteTypes]=None) -> List[Carte]:
+def get_user_cartes(bd_session : Session, user_id : int, type_carte : Optional[CarteTypes]=None) -> CRUDResponse[List[Carte]]:
     """
     Fonction pour récuperer les cartes d'un utilisateur, avec possibilité de filtrage
     Args:
@@ -94,7 +98,9 @@ def get_user_cartes(bd_session : Session, user_id : int, type_carte : Optional[C
 
     #TODO: Chercher une autre approche plus rapide apreès, passer directement par requete sql
     cartes: List[Carte] = []
-    accounts = get_user_accounts(bd_session, user_id)       # On récupère tous les comptes de l'user
+    result = get_user_accounts(bd_session, user_id)       # On récupère tous les comptes de l'user
+
+    accounts = result.data
 
     # On itère sur les comptes pour récuperer les cartes
     for account in accounts:
@@ -105,9 +111,9 @@ def get_user_cartes(bd_session : Session, user_id : int, type_carte : Optional[C
     if type_carte:      # On filtre si on doit filtrer
         cartes = [carte for carte in cartes if carte.type_carte is type_carte]
 
-    return cartes
+    return CRUDResponse.crud_success(cartes)
 
-def get_user_cartes_in_an_account(bd_session : Session, user_id : int, account_id : int, type_carte : Optional[CarteTypes]=None) -> Sequence[Carte]:
+def get_user_cartes_in_an_account(bd_session : Session, user_id : int, account_id : int, type_carte : Optional[CarteTypes]=None) -> CRUDResponse[Sequence[Carte]]:
     """
     Fonction pour obtenir toutes les cartes d'un compte précis
 
@@ -121,19 +127,26 @@ def get_user_cartes_in_an_account(bd_session : Session, user_id : int, account_i
     Returns:
         Sequence[Carte] : La liste des cartes recherchées
     """
-    account = get_account_by_id(bd_session, user_id, account_id)
+    result = get_account_by_id(bd_session, user_id, account_id)
+
+    if result.is_error():
+        return CRUDResponse.crud_error(result.error)
+
+    account = result.data
 
     if not account:     # Si la carte n'est pas found on retourne une liste empty
-        return []
+        return CRUDResponse.crud_success([])
 
     cartes = account.cartes
+
     if type_carte:      # On filtre si on doit filtrer
         cartes = [carte for carte in cartes if carte.type_carte is type_carte]
-    return cartes
+
+    return CRUDResponse.crud_success(cartes)
 
 
 
-def get_user_specific_carte(bd_session : Session, user_id : int, carte_id : int, carte_password : str) -> Optional[Carte]:
+def get_user_specific_carte(bd_session : Session, user_id : int, carte_id : int, carte_password : str) -> CRUDResponse[Optional[Carte]]:
     """
     Fonction pour récuperer une carte spécifique d'un utilisateur
     Args:
@@ -152,17 +165,18 @@ def get_user_specific_carte(bd_session : Session, user_id : int, carte_id : int,
     carte : Carte | None = bd_session.scalar(query)             #Execution de la requete
 
     if not carte:
-        return None     # Carte non trouvé
+        return CRUDResponse.crud_error("Cette carte n'existe pas")     # Carte non trouvé
 
     if not verify_password(carte_password, carte.hashed_code_secu):     # On vérifie le mdp donné par l'user
-        return None
+        return CRUDResponse.crud_error("Mot de passe de la carte incorrect")
 
     if carte.base_account.account_owner_id != user_id:          # On vérifie si la carte appartient bien à l'user
-        return None
+        return CRUDResponse.crud_error("Cette carte ne vous appartient pas")
 
-    return carte
 
-def delete_user_carte(bd_session :Session, user_id : int, carte_id : int, carte_password : str) -> bool:
+    return CRUDResponse.crud_success(carte)
+
+def delete_user_carte(bd_session :Session, user_id : int, carte_id : int, carte_password : str) -> CRUDResponse[bool]:
     """
     Fonction pour supprimer une carte spécifique d'un utilisateur
     Args:
@@ -181,23 +195,25 @@ def delete_user_carte(bd_session :Session, user_id : int, carte_id : int, carte_
     carte: Carte | None = bd_session.scalar(query)                  # Execution de la requete
 
     if not carte:
-        return False        #Carte inexistante
+        return CRUDResponse.crud_error("Cette carte n'existe pas")  # Carte non trouvé
 
-    if not verify_password(carte_password, carte.hashed_code_secu):     # Vérification du mdp
-        return False
+    if not verify_password(carte_password, carte.hashed_code_secu):  # On vérifie le mdp donné par l'user
+        return CRUDResponse.crud_error("Mot de passe de la carte incorrect")
 
-    if carte.base_account.account_owner_id != user_id:                # On vérifie si la carte appartient bien à l'user
-        return False
+    if carte.base_account.account_owner_id != user_id:  # On vérifie si la carte appartient bien à l'user
+        return CRUDResponse.crud_error("Cette carte ne vous appartient pas")
 
     try:
         bd_session.delete(carte)        # Suppression effective de la carte
         bd_session.commit()
-        return True
+        return CRUDResponse.crud_success(True)
     except Exception as e:
-        print(f'Exception {e.__class__.__name__} : {e}')
-        return False
+        exc = f'Exception {e.__class__.__name__} : {e}'
+        print(exc)
+        return CRUDResponse.crud_error(exc)
 
-def change_carte_password(bd_session :Session, user_id : int, carte_id : int, old_password : str, new_password : str) -> bool:
+
+def change_carte_password(bd_session :Session, user_id : int, carte_id : int, old_password : str, new_password : str) -> CRUDResponse[bool]:
     """
     Fonction pour changer le mot de passe d'une carte spécifique d'un utilisateur
     Args:
@@ -217,19 +233,20 @@ def change_carte_password(bd_session :Session, user_id : int, carte_id : int, ol
     carte: Carte | None = bd_session.scalar(query)                  # Execution de la requete
 
     if not carte:
-        return False            # Carte inexistante
+        return CRUDResponse.crud_error("Cette carte n'existe pas")  # Carte non trouvé
 
-    if carte.base_account.account_owner_id != user_id:          # On vérifie si la carte appartient bien à l'user
-        return False
+    if not verify_password(old_password, carte.hashed_code_secu):  # On vérifie le mdp donné par l'user
+        return CRUDResponse.crud_error("Mot de passe de la carte incorrect")
 
-    if not verify_password(old_password, carte.hashed_code_secu):   # On vérifie si le mdp est correct
-        return False
+    if carte.base_account.account_owner_id != user_id:  # On vérifie si la carte appartient bien à l'user
+        return CRUDResponse.crud_error("Cette carte ne vous appartient pas")
 
     carte.hashed_code_secu = hash_password(new_password)        # Mise à jour du mdp de la carte
     try:
         bd_session.commit()                             # Commit des changements
-        return True
+        return CRUDResponse.crud_success(True)
     except Exception as e:
-        print(f'Exception {e.__class__.__name__} : {e}')
-        return False
+        exc = f'Exception {e.__class__.__name__} : {e}'
+        print(exc)
+        return CRUDResponse.crud_error(exc)
 
