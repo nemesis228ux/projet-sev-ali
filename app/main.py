@@ -25,6 +25,13 @@ app.include_router(transaction_routes)
 app.include_router(carte_routes)
 
 
+# Route de monitoring
+@app.api_route("/health", methods=["GET", "HEAD", "POST"], include_in_schema=False)
+def health():
+    """Route de monitoring"""
+    return {"message": "running"}
+
+
 @app.get("/")
 def root():
     """Route à la racine : root"""
