@@ -168,7 +168,7 @@ class Transactor:
                 return False, result.error
 
             account = result.data
-            solde = account.data.solde
+            solde = account.solde
 
             if self.__transaction_amount > solde:
                 return False, "Solde insuffisant pour le retrait"
