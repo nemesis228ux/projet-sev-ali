@@ -7,6 +7,8 @@ from app.routes import userRoute
 from app.routes.carteRoute import router as carte_routes
 from app.routes.compteRoute import router as compte_routes
 from app.routes.transactionRoute import router as transaction_routes
+from fastapi.middleware.cors import CORSMiddleware
+
 
 add_all_tables()
 
@@ -23,6 +25,22 @@ app.include_router(compte_routes)
 app.include_router(transaction_routes)
 
 app.include_router(carte_routes)
+
+
+# liste des origines autorisé
+origins = [
+    "http://localhost:5173", ## url front en local
+    "" ## url front en prod
+]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = origins,
+    allow_credentials=True,
+    allow_methods = ['*'],
+    allow_headers = ['*']
+)
 
 
 # Route de monitoring
